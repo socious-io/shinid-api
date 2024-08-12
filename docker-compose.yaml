@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: 'shinid-pg'
+    image: 'postgres:14.4-alpine'
+    environment:
+      POSTGRES_USER: 'shinid'
+      POSTGRES_PASSWORD: 'passwd'
+      PGDATA: '/data/postgres'
+    volumes:
+      - '../shinid-postgres:/data/postgres'
+    expose:
+      - '5432'
+    ports:
+      - '5432:5432'
+    restart: 'always'
+
+networks:
+  default:
+    driver: bridge

@@ -3,9 +3,9 @@ package views
 import (
 	"context"
 	"net/http"
-	"shinid/src/app/auth"
-	"shinid/src/app/models"
-	"shinid/src/utils"
+	"shin/src/app/auth"
+	"shin/src/app/models"
+	"shin/src/utils"
 
 	"github.com/gin-gonic/gin"
 )

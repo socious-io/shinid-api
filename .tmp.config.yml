@@ -2,6 +2,6 @@ port: 3000
 secret: this-is-secret
 debug: true
 database: 
-  url: postgres://shinid:passwd@localhost:5432/shinid?sslmode=disable
+  url: postgres://shin:passwd@localhost:5432/shin?sslmode=disable
   sqldir: src/sql
   migrations: src/sql/migrations

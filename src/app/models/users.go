@@ -2,7 +2,7 @@ package models
 
 import (
 	"context"
-	"shinid/src/database"
+	"shin/src/database"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,7 +38,7 @@ func (u *User) Scan(rows *sqlx.Rows) error {
 }
 
 func (u *User) Create(ctx context.Context) error {
-	rows, err := database.QueryRows(
+	rows, err := database.Query(
 		ctx,
 		"users/register",
 		u.FirstName, u.LastName, u.Username, u.Email, u.Password,
@@ -55,9 +55,9 @@ func (u *User) Create(ctx context.Context) error {
 	return nil
 }
 
-func GetUser(id string) (*User, error) {
+func GetUser(id uuid.UUID) (*User, error) {
 	u := new(User)
-	if err := database.Fetch(u, id); err != nil {
+	if err := database.Fetch(u, id.String()); err != nil {
 		return nil, err
 	}
 	return u, nil
@@ -65,7 +65,7 @@ func GetUser(id string) (*User, error) {
 
 func GetUserByEmail(email string) (*User, error) {
 	u := new(User)
-	if err := database.Get(u, "users/fetchByEmail", email); err != nil {
+	if err := database.Get(u, "users/fetch_by_email", email); err != nil {
 		return nil, err
 	}
 	return u, nil

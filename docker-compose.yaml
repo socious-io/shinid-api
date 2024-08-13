@@ -2,14 +2,14 @@ version: '3'
 
 services:
   postgres:
-    container_name: 'shinid-pg'
+    container_name: 'shin-pg'
     image: 'postgres:14.4-alpine'
     environment:
-      POSTGRES_USER: 'shinid'
+      POSTGRES_USER: 'shin'
       POSTGRES_PASSWORD: 'passwd'
       PGDATA: '/data/postgres'
     volumes:
-      - '../shinid-postgres:/data/postgres'
+      - '../shin-postgres:/data/postgres'
     expose:
       - '5432'
     ports:

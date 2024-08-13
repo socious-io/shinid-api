@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
-	"shinid/src/app/views"
-	"shinid/src/config"
+	"shin/src/app/views"
+	"shin/src/config"
 	"time"
 
 	"github.com/gin-gonic/gin"

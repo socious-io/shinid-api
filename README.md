@@ -1,4 +1,4 @@
-# ShinID API
+# shin API
 
 ## Database Query system
 **Temp Note**: *would update db query related documents here*
@@ -17,7 +17,7 @@
 ## Quick start
 **should take care of matching config file to related connection such as pg and nats**
 ```
-$ cd shinid-api
+$ cd shin-api
 $ cp .tmp.config.yml config.yml
 $ sudo docker-compose up -d
 $ go get

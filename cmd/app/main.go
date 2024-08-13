@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"shinid/src/app"
-	"shinid/src/config"
-	"shinid/src/database"
+	"shin/src/app"
+	"shin/src/config"
+	"shin/src/database"
 	"time"
 )
 

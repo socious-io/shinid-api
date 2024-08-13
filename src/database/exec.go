@@ -37,12 +37,11 @@ func Fetch(dest interface{}, ids ...string) error {
 		default:
 			log.Fatal("invalid type to cast")
 		}
-
 		q, err := LoadQuery(queryName)
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		fmt.Println(q, "-------------------")
 		db := GetDB()
 
 		if db == nil {
@@ -146,8 +145,8 @@ func ExecuteQuery(ctx context.Context, queryName string, args ...interface{}) (s
 	return result, err
 }
 
-// QueryRows is a general function to execute a read operation that returns multiple rows with a circuit breaker
-func QueryRows(ctx context.Context, queryName string, args ...interface{}) (*sqlx.Rows, error) {
+// Query is a general function to execute a read operation that returns multiple rows with a circuit breaker
+func Query(ctx context.Context, queryName string, args ...interface{}) (*sqlx.Rows, error) {
 	rows, err := cb.Execute(func() (interface{}, error) {
 		query, err := LoadQuery(queryName)
 		if err != nil {
@@ -160,6 +159,23 @@ func QueryRows(ctx context.Context, queryName string, args ...interface{}) (*sql
 			return nil, fmt.Errorf("database not connected")
 		}
 		return db.QueryxContext(ctx, query, args...)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return rows.(*sqlx.Rows), nil
+}
+
+func TxQuery(ctx context.Context, tx *sqlx.Tx, queryName string, args ...interface{}) (*sqlx.Rows, error) {
+	rows, err := cb.Execute(func() (interface{}, error) {
+		query, err := LoadQuery(queryName)
+		if err != nil {
+			return nil, fmt.Errorf("could not load query: %v", err)
+		}
+
+		return tx.QueryxContext(ctx, query, args...)
 	})
 
 	if err != nil {

@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"shinid/src/config"
+	"shin/src/config"
 	"strconv"
 	"time"
 

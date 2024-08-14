@@ -41,7 +41,7 @@ func Fetch(dest interface{}, ids ...string) error {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(q, "-------------------")
+
 		db := GetDB()
 
 		if db == nil {

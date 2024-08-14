@@ -1,1 +1,1 @@
-SELECT * FROM organizations WHERE id IN($1)
+SELECT * FROM organizations WHERE id IN(?)

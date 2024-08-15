@@ -20,9 +20,11 @@ type User struct {
 	LastName  *string   `db:"last_name" json:"last_name"`
 	Phone     *string   `db:"phone" json:"phone"`
 	AvatarID  uuid.UUID `db:"avatar_id" json:"avatar_id"`
+	Status    string    `db:"status" json:"status"`
 
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	CreatedAt       time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
+	EmailVerifiedAt time.Time `db:"email_verified_at" json:"email_verified_at"`
 }
 
 func (*User) TableName() string {
@@ -42,6 +44,24 @@ func (u *User) Create(ctx context.Context) error {
 		ctx,
 		"users/register",
 		u.FirstName, u.LastName, u.Username, u.Email, u.Password,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := u.Scan(rows); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (u *User) Verify(ctx context.Context) error {
+	rows, err := database.Query(
+		ctx,
+		"users/verify",
+		u.ID, u.Status,
 	)
 	if err != nil {
 		return err

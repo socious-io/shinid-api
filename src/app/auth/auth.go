@@ -15,6 +15,10 @@ type LoginForm struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
+type OTPConfirmForm struct {
+	Code int `json:"email" validate:"required"`
+}
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err

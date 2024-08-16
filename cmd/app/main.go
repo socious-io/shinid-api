@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"shin/src/app"
 	"shin/src/config"
 	"shin/src/database"
@@ -10,7 +9,6 @@ import (
 
 func main() {
 	config.Init("config.yml")
-	fmt.Println(config.Config)
 	database.Connect(&database.ConnectOption{
 		URL:         config.Config.Database.URL,
 		SqlDir:      config.Config.Database.SqlDir,

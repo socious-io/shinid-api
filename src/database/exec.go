@@ -18,11 +18,6 @@ var (
 	cacheLock  sync.RWMutex
 )
 
-// Create inserts a new record into the database
-func Create(ctx context.Context, queryName string, model Model) (sql.Result, error) {
-	return ExecuteQuery(ctx, queryName, extractFields(model)...)
-}
-
 // Get retrieves multiple records from the database with pagination
 func Fetch(dest interface{}, ids ...string) error {
 	_, err := cb.Execute(func() (interface{}, error) {
@@ -91,11 +86,6 @@ func Get(dest interface{}, queryName string, args ...interface{}) error {
 	return err
 }
 
-// Update updates an existing record in the database
-func Update(ctx context.Context, queryName string, model Model, args ...interface{}) (sql.Result, error) {
-	return ExecuteQuery(ctx, queryName, append(extractFields(model), args...)...)
-}
-
 // LoadQuery reads the SQL query from the file and caches it.
 func LoadQuery(queryName string) (string, error) {
 	cacheLock.RLock()
@@ -121,7 +111,7 @@ func LoadQuery(queryName string) (string, error) {
 }
 
 // ExecuteQuery is a general function to execute a write operation (INSERT, UPDATE, DELETE) with a circuit breaker
-func ExecuteQuery(ctx context.Context, queryName string, args ...interface{}) (sql.Result, error) {
+func ExecuteQuery(queryName string, data interface{}) (sql.Result, error) {
 	var result sql.Result
 	_, err := cb.Execute(func() (interface{}, error) {
 		query, err := LoadQuery(queryName)
@@ -134,7 +124,27 @@ func ExecuteQuery(ctx context.Context, queryName string, args ...interface{}) (s
 			return nil, fmt.Errorf("database not connected")
 		}
 
-		result, err = db.ExecContext(ctx, query, args...)
+		result, err = db.NamedExec(query, data)
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	})
+
+	return result, err
+}
+
+// TxExecuteQuery is a general function to execute a write operation (INSERT, UPDATE, DELETE) with a circuit breaker
+func TxExecuteQuery(tx *sqlx.Tx, queryName string, data interface{}) (sql.Result, error) {
+	var result sql.Result
+	_, err := cb.Execute(func() (interface{}, error) {
+		query, err := LoadQuery(queryName)
+		if err != nil {
+			return nil, fmt.Errorf("could not load query: %v", err)
+		}
+
+		result, err = tx.NamedExec(query, data)
 		if err != nil {
 			return nil, err
 		}

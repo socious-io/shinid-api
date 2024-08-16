@@ -6,4 +6,5 @@ func Init(r *gin.Engine) {
 	authGroup(r)
 	orgGroup(r)
 	userGroup(r)
+	rootGroup(r)
 }

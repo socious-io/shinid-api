@@ -5,7 +5,7 @@
 
 ## E2E Tests
 ```
-go run test -v ./tests -c test.config.yml
+go test -v ./tests -c test.config.yml
 ```
 
 ## Migration system

@@ -15,6 +15,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -50,10 +52,13 @@ func replaceAny(a, b gin.H) {
 	}
 }
 
-func bodyExpect(responseBody io.Reader, expect gin.H) {
+func decodeBody(responseBody io.Reader) gin.H {
 	body := gin.H{}
 	decoder := json.NewDecoder(responseBody)
 	decoder.Decode(&body)
+	return body
+}
+func bodyExpect(body, expect gin.H) {
 	replaceAny(expect, body)
 	Expect(body).To(Equal(expect))
 }

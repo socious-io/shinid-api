@@ -31,12 +31,12 @@ func Connect(options *ConnectOption) *sqlx.DB {
 	if err := checkOrCreateDB(options.URL); err != nil {
 		log.Fatal(err)
 	}
-	db, err := sqlx.Open("postgres", options.URL)
+	database, err := sqlx.Open("postgres", options.URL)
 	if err != nil {
 		log.Fatalf("could not connect to the database: %v", err)
 	}
 
-	if err := db.Ping(); err != nil {
+	if err := database.Ping(); err != nil {
 		log.Fatalf("could not ping the database: %v", err)
 	}
 	// Initialize the circuit breaker
@@ -56,7 +56,8 @@ func Connect(options *ConnectOption) *sqlx.DB {
 		},
 	})
 	sqlDir = options.SqlDir
-	return db
+	db = database
+	return database
 }
 
 func DropDatabase(dbURL string) error {

@@ -5,8 +5,6 @@ import (
 	"net/http/httptest"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,7 +31,7 @@ var _ = Describe("Ping Route", func() {
 			router.ServeHTTP(w, req)
 
 			Expect(w.Code).To(Equal(200))
-			bodyExpect(w.Body, gin.H{"message": "pong"})
+			bodyExpect(decodeBody(w.Body), gin.H{"message": "pong"})
 		})
 	})
 })

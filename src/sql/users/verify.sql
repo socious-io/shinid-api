@@ -1,3 +1,3 @@
 UPDATE users
-SET status=$2, email_verified_at=NOW()
+SET status=$2
 WHERE id=$1

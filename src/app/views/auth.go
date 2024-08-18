@@ -2,12 +2,13 @@ package views
 
 import (
 	"context"
+	"math/rand/v2"
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
+	"shin/src/app/services"
 	"shin/src/utils"
-
-	"math/rand/v2"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -74,24 +75,42 @@ func authGroup(router *gin.Engine) {
 			Code:   100000 + rand.IntN(100)*9000,
 		}
 		otp.Create(ctx.(context.Context))
-		//TODO: Send email
+
+		//Sending Email
+		u, err := models.GetUser(uuid.MustParse(userID.(string)))
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "User does not found",
+			})
+			return
+		}
+		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
+		services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
 	})
 
-	g.POST("/otp/resend", func(c *gin.Context) {
+	g.POST("/otp/resend", auth.LoginRequired(), func(c *gin.Context) {
 		userID, _ := c.Get("user_id")
 		otp, err := models.GetOTPByUserID(uuid.MustParse(userID.(string)))
-
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
 
+		//Sending Email
 		u, err := models.GetUser(uuid.MustParse(userID.(string)))
-
-		//TODO: Resend email to u.email with otp.Code
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "User does not found",
+			})
+			return
+		}
+		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
+		services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
 	})
 
-	g.POST("/otp/verify", func(c *gin.Context) {
+	g.POST("/otp/verify", auth.LoginRequired(), func(c *gin.Context) {
 
 		form := new(auth.OTPConfirmForm)
 		if err := c.ShouldBindJSON(form); err != nil {
@@ -125,10 +144,6 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
-	})
-
-	g.POST("/forget-password", func(ctx *gin.Context) {
 
 	})
 

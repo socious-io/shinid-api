@@ -16,7 +16,7 @@ type LoginForm struct {
 }
 
 type OTPConfirmForm struct {
-	Code int `json:"email" validate:"required"`
+	Code int `json:"code" validate:"required"`
 }
 
 func HashPassword(password string) (string, error) {

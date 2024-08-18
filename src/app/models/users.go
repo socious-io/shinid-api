@@ -22,9 +22,8 @@ type User struct {
 	AvatarID  uuid.UUID `db:"avatar_id" json:"avatar_id"`
 	Status    string    `db:"status" json:"status"`
 
-	CreatedAt       time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
-	EmailVerifiedAt time.Time `db:"email_verified_at" json:"email_verified_at"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
 func (*User) TableName() string {

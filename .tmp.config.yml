@@ -5,3 +5,6 @@ database:
   url: postgres://shin:passwd@localhost:5432/shin?sslmode=disable
   sqldir: src/sql
   migrations: src/sql/migrations
+sendgrid:
+  url: "url"
+  api_key: "api_key"

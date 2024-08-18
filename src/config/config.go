@@ -17,6 +17,10 @@ type ConfigType struct {
 		SqlDir     string `mapstructure:"sqldir"`
 		Migrations string `mapstructure:"migrations"`
 	} `mapstructure:"database"`
+	Sendgrid struct {
+		URL    string `mapstructure:"url"`
+		ApiKey string `mapstructure:"api_key"`
+	} `mapstructure:"sendgrid"`
 }
 
 func Init(configPath string) {

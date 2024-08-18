@@ -3,6 +3,11 @@
 ## Database Query system
 **Temp Note**: *would update db query related documents here*
 
+## E2E Tests
+```
+go test -v ./tests -c test.config.yml
+```
+
 ## Migration system
  **New migrations :**
  ```

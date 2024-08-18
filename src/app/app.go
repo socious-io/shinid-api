@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Serve() {
+func Init() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(func(c *gin.Context) {
@@ -21,5 +21,10 @@ func Serve() {
 	})
 
 	views.Init(router)
+	return router
+}
+
+func Serve() {
+	router := Init()
 	router.Run(fmt.Sprintf("127.0.0.1:%d", config.Config.Port))
 }

@@ -51,6 +51,7 @@ CREATE TABLE organization_members (
   user_id UUID NOT NULL,
   organization_id UUID NOT NULL,
   created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (user_id, organization_id),
   CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_org FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 );

@@ -1,1 +1,1 @@
-SELECT * FROM users WHERE id IN ($1)
+SELECT * FROM users WHERE id IN (?)

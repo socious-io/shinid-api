@@ -79,6 +79,45 @@ func authGroup(router *gin.Engine) {
 		})
 	})
 
+	g.POST("/refresh", func(c *gin.Context) {
+		form := new(auth.RefreshTokenForm)
+		if err := c.ShouldBindJSON(form); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		claims, err := auth.VerifyToken(form.RefreshToken)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		tb := models.TokenBlacklist{
+			Token: form.RefreshToken,
+		}
+		ctx, _ := c.Get("ctx")
+		if err := tb.Create(ctx.(context.Context)); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		accessToken, err := auth.GenerateToken(claims.ID, false)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		refreshToken, err := auth.GenerateToken(claims.ID, true)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+		})
+	})
+
 	g.POST("/otp", func(c *gin.Context) {
 
 		form := new(auth.OTPSendForm)

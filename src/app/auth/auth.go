@@ -23,6 +23,10 @@ type OTPConfirmForm struct {
 	Code  int    `json:"code" validate:"required"`
 }
 
+type RefreshTokenForm struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err

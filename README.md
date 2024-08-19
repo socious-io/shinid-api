@@ -6,7 +6,15 @@
 ## E2E Tests
 ```
 go test -v ./tests -c test.config.yml
+
 ```
+**Focus on group**
+```
+go test -v ./tests -c test.config.yml -ginkgo.focus=Ping
+```
+
+add your tests on `./tests/main_test.go` to main suit function
+
 
 ## Migration system
  **New migrations :**

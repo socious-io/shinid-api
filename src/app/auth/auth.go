@@ -15,8 +15,12 @@ type LoginForm struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
+type OTPSendForm struct {
+	Email string `json:"email" validate:"required,email"`
+}
 type OTPConfirmForm struct {
-	Code int `json:"code" validate:"required"`
+	Email string `json:"email" validate:"required,email"`
+	Code  int    `json:"code" validate:"required"`
 }
 
 func HashPassword(password string) (string, error) {

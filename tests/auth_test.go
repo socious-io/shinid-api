@@ -3,7 +3,6 @@ package tests_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"shin/src/app/models"
@@ -34,11 +33,6 @@ var _ = Describe("Auth Group", func() {
 			sendOTP(router)
 		})
 	})
-	Context("POST /auth/otp/resend", func() {
-		It("should return status 200", func() {
-			resendOTP(router)
-		})
-	})
 	Context("POST /auth/otp/verify", func() {
 		It("should return status 200", func() {
 			verifyOTP(db, router)
@@ -60,23 +54,14 @@ func register(r *gin.Engine) {
 	body := decodeBody(w.Body)
 
 	Expect(w.Code).To(Equal(200))
-	bodyExpect(body, gin.H{"access_token": "<ANY>"})
-	users_data[0]["access_token"] = body["access_token"]
+	bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>"})
 }
 
 func sendOTP(r *gin.Engine) {
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/auth/otp", nil)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", users_data[0]["access_token"]))
-	r.ServeHTTP(w, req)
-
-	Expect(w.Code).To(Equal(200))
-}
-
-func resendOTP(r *gin.Engine) {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/auth/otp/resend", nil)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", users_data[0]["access_token"]))
+	reqBody, _ := json.Marshal(gin.H{"email": users_data[0]["email"]})
+	req, _ := http.NewRequest("POST", "/auth/otp", bytes.NewBuffer(reqBody))
+	req.Header.Set("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 
 	Expect(w.Code).To(Equal(200))
@@ -89,10 +74,9 @@ func verifyOTP(db *sqlx.DB, r *gin.Engine) {
 	db.Get(otp, "SELECT * FROM otps LIMIT 1")
 
 	w := httptest.NewRecorder()
-	reqBody, _ := json.Marshal(gin.H{"code": otp.Code})
+	reqBody, _ := json.Marshal(gin.H{"email": users_data[0]["email"], "code": otp.Code})
 	req, _ := http.NewRequest("POST", "/auth/otp/verify", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", users_data[0]["access_token"]))
 	r.ServeHTTP(w, req)
 
 	Expect(w.Code).To(Equal(200))

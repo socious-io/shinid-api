@@ -54,6 +54,7 @@ func (o *OTP) Verify(ctx context.Context) error {
 		"otp/verify",
 		o.UserID, o.Code,
 	)
+
 	if err != nil {
 		return err
 	}
@@ -62,6 +63,7 @@ func (o *OTP) Verify(ctx context.Context) error {
 		if err := o.Scan(rows); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }

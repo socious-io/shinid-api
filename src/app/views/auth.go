@@ -7,6 +7,7 @@ import (
 	"shin/src/app/auth"
 	"shin/src/app/models"
 	"shin/src/app/services"
+	"shin/src/config"
 	"shin/src/utils"
 	"strconv"
 
@@ -72,7 +73,7 @@ func authGroup(router *gin.Engine) {
 		ctx, _ := c.Get("ctx")
 		otp := models.OTP{
 			UserID: uuid.MustParse(userID.(string)),
-			Code:   100000 + rand.IntN(100)*9000,
+			Code:   int(100000 + rand.Float64()*900000),
 		}
 		otp.Create(ctx.(context.Context))
 
@@ -86,7 +87,15 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
-		services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
+		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
+		if err != nil && config.Config.Env != "test" {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   err.Error(),
+				"message": "Couldn't send OTP Code to mailbox",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{})
 	})
 
 	g.POST("/otp/resend", auth.LoginRequired(), func(c *gin.Context) {
@@ -107,7 +116,15 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
-		services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
+		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
+		if err != nil && config.Config.Env != "test" {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   err.Error(),
+				"message": "Couldn't send OTP Code to mailbox",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{})
 	})
 
 	g.POST("/otp/verify", auth.LoginRequired(), func(c *gin.Context) {
@@ -127,9 +144,16 @@ func authGroup(router *gin.Engine) {
 			Code:   form.Code,
 		}
 
-		if err := otp.Verify(ctx.(context.Context)); err != nil {
-			c.JSON(http.StatusNotFound, gin.H{
+		err := otp.Verify(ctx.(context.Context))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   err.Error(),
+				"message": "A problem occured when trying to verify the code",
+			})
+			return
+		} else if otp.IsVerified == false {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   nil,
 				"message": "Code does not found or it is wrong",
 			})
 			return
@@ -144,6 +168,8 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		c.JSON(http.StatusOK, gin.H{})
 
 	})
 

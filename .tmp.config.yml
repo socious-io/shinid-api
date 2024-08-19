@@ -1,3 +1,4 @@
+env: "[development/test/production]"
 port: 3000
 secret: this-is-secret
 debug: true

@@ -1,7 +1,10 @@
 package services
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"shin/src/config"
 
@@ -43,13 +46,14 @@ func (sgc *SendGridType) SendWithTemplate(address string, name string, templateI
 	request.Method = "POST"
 	request.Body = mail.GetRequestBody(m)
 
-	_, err := sendgrid.API(request)
+	response, err := sendgrid.API(request)
 	if err != nil {
 		fmt.Println(err)
 		return err
-	} else {
-		return nil
+	} else if strings.Split(strconv.Itoa(response.StatusCode), "")[0] != "2" {
+		return errors.New(response.Body)
 	}
+	return nil
 }
 
 func InitSendGridService() {

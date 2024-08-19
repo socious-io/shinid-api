@@ -9,6 +9,7 @@ import (
 var Config ConfigType
 
 type ConfigType struct {
+	Env      string `mapstructure:"env"`
 	Port     int    `mapstructure:"port"`
 	Debug    bool   `mapstructure:"debug"`
 	Secret   string `mapstructure:"string"`

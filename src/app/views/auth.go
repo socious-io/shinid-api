@@ -52,7 +52,10 @@ func authGroup(router *gin.Engine) {
 		utils.Copy(form, u)
 		password, _ := auth.HashPassword(form.Password)
 		u.Password = &password
-		u.Username = auth.GenerateUsername(u.Email)
+
+		if u.Username == "" {
+			u.Username = auth.GenerateUsername(u.Email)
+		}
 
 		ctx, _ := c.Get("ctx")
 		if err := u.Create(ctx.(context.Context)); err != nil {

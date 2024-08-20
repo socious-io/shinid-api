@@ -13,6 +13,7 @@ type OTP struct {
 	ID         uuid.UUID `db:"id" json:"id"`
 	UserID     uuid.UUID `db:"user_id" json:"user_id"`
 	Code       int       `db:"code" json:"code"`
+	Perpose    string    `db:"perpose" json:"perpose"`
 	IsVerified bool      `db:"is_verified" json:"is_verified"`
 	ExpiresAt  time.Time `db:"expired_at" json:"expired_at"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`

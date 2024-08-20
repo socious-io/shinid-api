@@ -2,10 +2,12 @@ package auth
 
 import (
 	"net/http"
+	"shin/src/app/models"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func LoginRequired() gin.HandlerFunc {
@@ -36,7 +38,13 @@ func LoginRequired() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", claims.ID)
+		u, err := models.GetUser(uuid.MustParse(claims.ID))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.Abort()
+			return
+		}
+		c.Set("user", u)
 		c.Next()
 	}
 }

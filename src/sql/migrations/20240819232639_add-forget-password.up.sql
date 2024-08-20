@@ -1,4 +1,0 @@
-CREATE TYPE otp_perposes AS ENUM ('AUTH', 'FORGET_PASSWORD');
-
-ALTER TABLE otps
-ADD COLUMN perpose otp_perposes DEFAULT 'AUTH' NOT NULL;

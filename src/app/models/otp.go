@@ -35,7 +35,7 @@ func (o *OTP) Create(ctx context.Context) error {
 	rows, err := database.Query(
 		ctx,
 		"otp/create",
-		o.UserID, o.Code,
+		o.UserID, o.Code, o.Perpose,
 	)
 	if err != nil {
 		return err

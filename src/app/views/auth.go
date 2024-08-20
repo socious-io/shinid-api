@@ -52,6 +52,8 @@ func authGroup(router *gin.Engine) {
 		utils.Copy(form, u)
 		password, _ := auth.HashPassword(form.Password)
 		u.Password = &password
+		u.Username = auth.GenerateUsername(u.Email)
+
 		ctx, _ := c.Get("ctx")
 		if err := u.Create(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -121,7 +123,14 @@ func authGroup(router *gin.Engine) {
 			Code:    int(100000 + rand.Float64()*900000),
 			Perpose: "AUTH",
 		}
-		otp.Create(ctx.(context.Context))
+
+		if err := otp.Create(ctx.(context.Context)); err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "Couldn't save OTP",
+			})
+			return
+		}
 
 		//Sending Email
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
@@ -179,6 +188,13 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 
+		if otp.Perpose == "FORGET_PASSWORD" {
+			if err := u.ExpirePassword(ctx.(context.Context)); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+		}
+
 		//Generating Token
 		tokens, err := auth.GenerateFullTokens(u.ID.String())
 		if err != nil {
@@ -189,7 +205,7 @@ func authGroup(router *gin.Engine) {
 		c.JSON(http.StatusOK, tokens)
 	})
 
-	g.POST("/forget-password", func(c *gin.Context) {
+	g.POST("/password/forget", func(c *gin.Context) {
 
 		form := new(auth.OTPSendForm)
 		if err := c.ShouldBindJSON(form); err != nil {
@@ -213,11 +229,18 @@ func authGroup(router *gin.Engine) {
 			Code:    int(100000 + rand.Float64()*900000),
 			Perpose: "FORGET_PASSWORD",
 		}
-		otp.Create(ctx.(context.Context))
+
+		if err := otp.Create(ctx.(context.Context)); err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "Couldn't save OTP",
+			})
+			return
+		}
 
 		//Sending Email
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
-		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
+		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["forget-password"], items)
 		if err != nil && config.Config.Env != "test" {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   err.Error(),
@@ -226,6 +249,79 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{})
+
+	})
+
+	g.POST("/password/update", auth.LoginRequired(), func(c *gin.Context) {
+
+		ctx, _ := c.Get("ctx")
+		u, _ := c.Get("user")
+		var password string
+
+		if u.(*models.User).PasswordExpired || *u.(*models.User).Password == "" {
+
+			//Direct Password change
+			form := new(auth.DirectPasswordChangeForm)
+			if err := c.ShouldBindJSON(form); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			password = form.Password
+
+		} else {
+
+			//Normal Password change
+			form := new(auth.NormalPasswordChangeForm)
+			if err := c.ShouldBindJSON(form); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+			if err := auth.CheckPasswordHash(form.CurrentPassword, *u.(*models.User).Password); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "email/password not match"})
+				return
+			}
+			password = form.Password
+
+		}
+
+		newPassword, err := auth.HashPassword(password)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		*u.(*models.User).Password = newPassword
+		if err := u.(*models.User).UpdatePassword(ctx.(context.Context)); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+	})
+
+	g.POST("/pre-register", func(c *gin.Context) {
+
+		form := new(auth.PreRegisterForm)
+		if err := c.ShouldBindJSON(form); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		u, err := models.GetUserByEmail(form.Email)
+		emailStatus := "AVAILABLE"
+		if err == nil && u.Status == "ACTIVE" {
+			emailStatus = "EXISTS"
+		}
+
+		u, err = models.GetUserByUsername(form.Username)
+		usernameStatus := "AVAILABLE"
+		if err == nil {
+			usernameStatus = "EXISTS"
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"email":    emailStatus,
+			"username": usernameStatus,
+		})
 
 	})
 

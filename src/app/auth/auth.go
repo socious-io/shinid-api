@@ -1,6 +1,14 @@
 package auth
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"math"
+	"math/rand/v2"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 type RegisterForm struct {
 	FirstName string `json:"first_name" validate:"required,min=3,max=32"`
@@ -27,6 +35,20 @@ type RefreshTokenForm struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
+type PreRegisterForm struct {
+	Email    string `json:"email" validate:"required,email"`
+	Username string `json:"username" validate:"required"`
+}
+
+type NormalPasswordChangeForm struct {
+	CurrentPassword string `json:"current_password" validate:"required"`
+	Password        string `json:"password" validate:"required"`
+}
+
+type DirectPasswordChangeForm struct {
+	Password string `json:"password" validate:"required"`
+}
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
@@ -34,4 +56,25 @@ func HashPassword(password string) (string, error) {
 
 func CheckPasswordHash(password, hash string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+}
+
+func GenerateUsername(email string) string {
+	var username string = email
+	var re *regexp.Regexp
+
+	re = regexp.MustCompile("@.*$")
+	username = re.ReplaceAllString(username, "")
+
+	re = regexp.MustCompile("[^a-z0-9._-]")
+	username = re.ReplaceAllString(username, "-")
+
+	re = regexp.MustCompile("[._-]{2,}")
+	username = re.ReplaceAllString(username, "-")
+
+	username = strings.ToLower(username)
+	username = username[0:int(math.Min(float64(len(username)), 20))]
+
+	username = username + strconv.Itoa(int(1000+rand.Float64()*9000))
+
+	return username
 }

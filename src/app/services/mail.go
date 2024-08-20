@@ -13,7 +13,8 @@ import (
 )
 
 var SendGridTemplates map[string]string = map[string]string{
-	"otp": "d-0146441b623f4cb78833c50eb1a8c813",
+	"otp":             "d-0146441b623f4cb78833c50eb1a8c813",
+	"forget-password": "d-d7aea3b78df042e8a2fdc83953960259",
 }
 
 var SendGridClient SendGridType

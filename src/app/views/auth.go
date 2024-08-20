@@ -32,20 +32,14 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "email/password not match"})
 			return
 		}
-		accessToken, err := auth.GenerateToken(u.ID.String(), false)
+
+		tokens, err := auth.GenerateFullTokens(u.ID.String())
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		refreshToken, err := auth.GenerateToken(u.ID.String(), true)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"access_token":  accessToken,
-			"refresh_token": refreshToken,
-		})
+
+		c.JSON(http.StatusOK, tokens)
 	})
 
 	g.POST("/register", func(c *gin.Context) {
@@ -63,20 +57,13 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		accessToken, err := auth.GenerateToken(u.ID.String(), false)
+		tokens, err := auth.GenerateFullTokens(u.ID.String())
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		refreshToken, err := auth.GenerateToken(u.ID.String(), true)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"access_token":  accessToken,
-			"refresh_token": refreshToken,
-		})
+
+		c.JSON(http.StatusOK, tokens)
 	})
 
 	g.POST("/refresh", func(c *gin.Context) {
@@ -102,20 +89,13 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 
-		accessToken, err := auth.GenerateToken(claims.ID, false)
+		tokens, err := auth.GenerateFullTokens(claims.ID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		refreshToken, err := auth.GenerateToken(claims.ID, true)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"access_token":  accessToken,
-			"refresh_token": refreshToken,
-		})
+
+		c.JSON(http.StatusOK, tokens)
 	})
 
 	g.POST("/otp", func(c *gin.Context) {
@@ -200,22 +180,13 @@ func authGroup(router *gin.Engine) {
 		}
 
 		//Generating Token
-		accessToken, err := auth.GenerateToken(u.ID.String(), false)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		refreshToken, err := auth.GenerateToken(u.ID.String(), true)
+		tokens, err := auth.GenerateFullTokens(u.ID.String())
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"access_token":  accessToken,
-			"refresh_token": refreshToken,
-		})
-
+		c.JSON(http.StatusOK, tokens)
 	})
 
 	g.POST("/forget-password", func(c *gin.Context) {

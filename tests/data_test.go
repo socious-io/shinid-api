@@ -3,7 +3,8 @@ package tests_test
 import "github.com/gin-gonic/gin"
 
 var (
-	authTokens = []string{}
+	authTokens        = []string{}
+	authRefreshTokens = []string{}
 
 	usersData = []gin.H{
 		{

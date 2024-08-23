@@ -22,3 +22,12 @@ type SchemaForm struct {
 		Type        models.AttributeType `json:"type"`
 	} `json:"attributes"`
 }
+
+type ProfileUpdateForm struct {
+	Username  string  `db:"username" json:"username"`
+	JobTitle  *string `db:"job_title" json:"job_title"`
+	Bio       *string `db:"bio" json:"bio"`
+	FirstName *string `db:"first_name" json:"first_name"`
+	LastName  *string `db:"last_name" json:"last_name"`
+	Phone     *string `db:"phone" json:"phone"`
+}

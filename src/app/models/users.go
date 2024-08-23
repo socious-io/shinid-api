@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type User struct {
@@ -35,10 +34,6 @@ func (*User) FetchQuery() string {
 	return "users/fetch"
 }
 
-func (u *User) Scan(rows *sqlx.Rows) error {
-	return rows.StructScan(u)
-}
-
 func (u *User) Create(ctx context.Context) error {
 	rows, err := database.Query(
 		ctx,
@@ -50,7 +45,7 @@ func (u *User) Create(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}

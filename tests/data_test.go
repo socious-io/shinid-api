@@ -19,4 +19,11 @@ var (
 	organizationsData = []gin.H{
 		{"name": "test", "description": "test desc"},
 	}
+
+	schemasData = []gin.H{
+		{"name": "test", "description": "test desc", "public": false, "attributes": []gin.H{
+			{"name": "test_field", "description": "desc of field", "type": "TEXT"},
+			{"name": "test_field_2", "description": "desc of field2", "type": "TEXT"},
+		}},
+	}
 )

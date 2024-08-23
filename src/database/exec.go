@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/jmoiron/sqlx/types"
 )
 
 var (
@@ -19,7 +21,7 @@ var (
 )
 
 // Get retrieves multiple records from the database with pagination
-func Fetch(dest interface{}, ids ...string) error {
+func Fetch(dest interface{}, ids ...any) error {
 	_, err := cb.Execute(func() (interface{}, error) {
 		isSlice := false
 		var queryName string
@@ -49,7 +51,6 @@ func Fetch(dest interface{}, ids ...string) error {
 		}
 
 		query = db.Rebind(query)
-
 		if isSlice {
 			if err := db.Select(dest, query, args...); err != nil {
 				return nil, err
@@ -58,6 +59,9 @@ func Fetch(dest interface{}, ids ...string) error {
 			if err := db.Get(dest, query, args...); err != nil {
 				return nil, err
 			}
+		}
+		if err := UnmarshalJSONTextFields(dest); err != nil {
+			return nil, err
 		}
 		return nil, nil
 	})
@@ -75,6 +79,14 @@ func Get(dest interface{}, queryName string, args ...interface{}) error {
 
 		if db == nil {
 			return nil, fmt.Errorf("database not connected")
+		}
+
+		var jsonBytes []byte
+		if err := db.QueryRowx(q, args...).Scan(&jsonBytes); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(jsonBytes, dest); err != nil {
+			return nil, err
 		}
 
 		if err := db.Get(dest, q, args...); err != nil {
@@ -178,6 +190,29 @@ func Query(ctx context.Context, queryName string, args ...interface{}) (*sqlx.Ro
 	return rows.(*sqlx.Rows), nil
 }
 
+// Query is a general function to execute a read operation that returns multiple rows with a circuit breaker
+func Queryx(queryName string, args ...interface{}) (*sqlx.Rows, error) {
+	rows, err := cb.Execute(func() (interface{}, error) {
+		query, err := LoadQuery(queryName)
+		if err != nil {
+			return nil, fmt.Errorf("could not load query: %v", err)
+		}
+
+		db := GetDB()
+
+		if db == nil {
+			return nil, fmt.Errorf("database not connected")
+		}
+		return db.Queryx(query, args...)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return rows.(*sqlx.Rows), nil
+}
+
 func TxQuery(ctx context.Context, tx *sqlx.Tx, queryName string, args ...interface{}) (*sqlx.Rows, error) {
 	rows, err := cb.Execute(func() (interface{}, error) {
 		query, err := LoadQuery(queryName)
@@ -211,6 +246,89 @@ func QuerySelect(queryName string, dest interface{}, args ...interface{}) error 
 		return nil, db.Select(dest, query, args...)
 	})
 	return err
+}
+
+// UnmarshalJSONTextFields processes a single struct or a slice of structs to unmarshal
+// fields of type types.JSONText into corresponding Go struct fields based on matching `db` and `json` tags.
+func UnmarshalJSONTextFields(input interface{}) error {
+	// Handle slice input
+	v := reflect.ValueOf(input)
+
+	if v.Kind() == reflect.Slice {
+		// Iterate over each element in the slice and call UnmarshalJSONTextFields recursively
+		for i := 0; i < v.Len(); i++ {
+			element := v.Index(i).Addr().Interface()
+			if err := UnmarshalJSONTextFields(element); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// Handle single struct input
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return fmt.Errorf("input must be a non-nil pointer to a struct or a slice")
+	}
+
+	v = v.Elem()
+
+	if v.Kind() != reflect.Struct {
+		return fmt.Errorf("input must be a pointer to a struct or a slice of structs")
+	}
+
+	t := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := t.Field(i)
+		// Look for fields of type types.JSONText
+		if fieldType.Type == reflect.TypeOf(types.JSONText("")) {
+			// Get the field name from the `db` tag
+			dbTag := fieldType.Tag.Get("db")
+			if dbTag == "" || dbTag == "-" {
+				continue
+			}
+
+			// Look for a corresponding field with the same json tag
+			for j := 0; j < v.NumField(); j++ {
+				targetField := v.Field(j)
+				targetFieldType := t.Field(j)
+				if targetFieldType.Tag.Get("json") != dbTag {
+					continue
+				}
+				// Ensure that the target field is a struct pointer and not the JSONText itself
+				if targetField.Kind() == reflect.Ptr && targetFieldType.Type.Kind() == reflect.Ptr {
+					targetField.Set(reflect.New(targetFieldType.Type.Elem())) // Initialize the struct pointer
+
+					// Unmarshal into the corresponding field
+					err := json.Unmarshal([]byte(field.Interface().(types.JSONText)), targetField.Interface())
+					if err != nil {
+						log.Println("parse json foreign Key : ", err)
+						continue
+					}
+				}
+
+				if targetField.Kind() == reflect.Slice && targetFieldType.Type.Kind() == reflect.Slice {
+					sliceType := targetFieldType.Type.Elem() // Get the type of the slice element
+
+					// Create a new slice with the appropriate type
+					slicePtr := reflect.New(reflect.SliceOf(sliceType)).Interface()
+
+					// Unmarshal into the slice
+					err := json.Unmarshal([]byte(field.Interface().(types.JSONText)), slicePtr)
+					if err != nil {
+						log.Println("parse Json array foreign Key : ", err)
+						continue
+					}
+
+					// Set the unmarshaled slice to the target field
+					targetField.Set(reflect.ValueOf(slicePtr).Elem())
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // extractFields extracts the fields from a struct and returns them as a slice of interface{}

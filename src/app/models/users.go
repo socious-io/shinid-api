@@ -63,7 +63,7 @@ func (u *User) Verify(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}
@@ -81,7 +81,7 @@ func (u *User) ExpirePassword(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}
@@ -99,7 +99,7 @@ func (u *User) UpdatePassword(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}
@@ -117,7 +117,7 @@ func (u *User) UpdateProfile(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}

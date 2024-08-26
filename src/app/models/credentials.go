@@ -33,11 +33,11 @@ type Attribute struct {
 	CreatedAt   time.Time     `db:"created_at" json:"created_at"`
 }
 
-func (*Schema) TableName() string {
+func (Schema) TableName() string {
 	return "credential_schemas"
 }
 
-func (*Schema) FetchQuery() string {
+func (Schema) FetchQuery() string {
 	return "credentials/fetch_schema"
 }
 
@@ -87,8 +87,33 @@ func (s *Schema) Create(ctx context.Context) error {
 func GetSchema(id uuid.UUID) (*Schema, error) {
 	s := new(Schema)
 
-	if err := database.Fetch(s, id.String()); err != nil {
+	if err := database.Fetch(s, id); err != nil {
 		return nil, err
 	}
 	return s, nil
+}
+
+func GetSchemas(userId uuid.UUID, p database.Paginate) ([]Schema, int, error) {
+	var (
+		schemas   = []Schema{}
+		fetchList []database.FetchList
+		ids       []interface{}
+	)
+
+	if err := database.QuerySelect("credentials/get_schemas", &fetchList, userId, p.Limit, p.Offet); err != nil {
+		return nil, 0, err
+	}
+
+	if len(fetchList) < 1 {
+		return schemas, 0, nil
+	}
+
+	for _, f := range fetchList {
+		ids = append(ids, f.ID)
+	}
+
+	if err := database.Fetch(&schemas, ids...); err != nil {
+		return nil, 0, err
+	}
+	return schemas, fetchList[0].TotalCount, nil
 }

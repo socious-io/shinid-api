@@ -14,11 +14,11 @@ type TokenBlacklist struct {
 	ExpiresAt string    `db:"expires_at" json:"expires_at"`
 }
 
-func (*TokenBlacklist) TableName() string {
+func (TokenBlacklist) TableName() string {
 	return "tokens_blacklist"
 }
 
-func (*TokenBlacklist) FetchQuery() string {
+func (TokenBlacklist) FetchQuery() string {
 	return "tokens_blacklist/fetch"
 }
 

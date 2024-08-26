@@ -28,11 +28,11 @@ type OrganizationMember struct {
 	CreatedAt      time.Time `db:"created_at" json:"created_at"`
 }
 
-func (*Organization) TableName() string {
+func (Organization) TableName() string {
 	return "organizations"
 }
 
-func (*Organization) FetchQuery() string {
+func (Organization) FetchQuery() string {
 	return "organizations/fetch"
 }
 

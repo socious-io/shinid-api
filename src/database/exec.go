@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sync"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/types"
@@ -21,22 +23,16 @@ var (
 )
 
 // Get retrieves multiple records from the database with pagination
-func Fetch(dest interface{}, ids ...any) error {
+func Fetch(dest interface{}, ids ...interface{}) error {
 	_, err := cb.Execute(func() (interface{}, error) {
-		isSlice := false
-		var queryName string
-		switch v := dest.(type) {
-		case Model:
-			queryName = v.FetchQuery()
-		case []Model:
-			queryName = v[0].FetchQuery()
-			isSlice = true
-		default:
-			log.Fatal("invalid type to cast")
+		queryName, isSlice, err := fetchQuery(dest)
+		if err != nil {
+			return nil, err
 		}
+
 		q, err := LoadQuery(queryName)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
 		db := GetDB()
@@ -44,7 +40,6 @@ func Fetch(dest interface{}, ids ...any) error {
 		if db == nil {
 			return nil, fmt.Errorf("database not connected")
 		}
-
 		query, args, err := sqlx.In(q, ids)
 		if err != nil {
 			return nil, err
@@ -60,6 +55,7 @@ func Fetch(dest interface{}, ids ...any) error {
 				return nil, err
 			}
 		}
+
 		if err := UnmarshalJSONTextFields(dest); err != nil {
 			return nil, err
 		}
@@ -254,7 +250,10 @@ func UnmarshalJSONTextFields(input interface{}) error {
 	// Handle slice input
 	v := reflect.ValueOf(input)
 
-	if v.Kind() == reflect.Slice {
+	if v.Kind() == reflect.Slice || v.Elem().Kind() == reflect.Slice {
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
 		// Iterate over each element in the slice and call UnmarshalJSONTextFields recursively
 		for i := 0; i < v.Len(); i++ {
 			element := v.Index(i).Addr().Interface()
@@ -299,9 +298,10 @@ func UnmarshalJSONTextFields(input interface{}) error {
 				// Ensure that the target field is a struct pointer and not the JSONText itself
 				if targetField.Kind() == reflect.Ptr && targetFieldType.Type.Kind() == reflect.Ptr {
 					targetField.Set(reflect.New(targetFieldType.Type.Elem())) // Initialize the struct pointer
-
+					data := []byte(field.Interface().(types.JSONText))
+					data = preprocessJSONDatetimes(data)
 					// Unmarshal into the corresponding field
-					err := json.Unmarshal([]byte(field.Interface().(types.JSONText)), targetField.Interface())
+					err := json.Unmarshal(data, targetField.Interface())
 					if err != nil {
 						log.Println("parse json foreign Key : ", err)
 						continue
@@ -313,9 +313,10 @@ func UnmarshalJSONTextFields(input interface{}) error {
 
 					// Create a new slice with the appropriate type
 					slicePtr := reflect.New(reflect.SliceOf(sliceType)).Interface()
-
+					data := []byte(field.Interface().(types.JSONText))
+					data = preprocessJSONDatetimes(data)
 					// Unmarshal into the slice
-					err := json.Unmarshal([]byte(field.Interface().(types.JSONText)), slicePtr)
+					err := json.Unmarshal(data, slicePtr)
 					if err != nil {
 						log.Println("parse Json array foreign Key : ", err)
 						continue
@@ -342,4 +343,64 @@ func extractFields(model interface{}) []interface{} {
 	}
 
 	return fields
+}
+
+func preprocessJSONDatetimes(data []byte) []byte {
+	// Regular expression to match any field ending with "_at" and its timestamp value
+	re := regexp.MustCompile(`"(\w+_at)"\s*:\s*"([^"]+)"`)
+	// Replace all matched timestamps with the adjusted format
+	return re.ReplaceAllFunc(data, func(match []byte) []byte {
+		// Extract key and timestamp using the capturing groups
+		matches := re.FindSubmatch(match)
+		if len(matches) < 3 {
+			return match // Safety check
+		}
+		key := string(matches[1])          // The key part (e.g., "created_at")
+		timestampStr := string(matches[2]) // The timestamp string
+
+		// Parse the timestamp into Go's time.Time
+		parsedTime, err := time.Parse("2006-01-02T15:04:05.999999", timestampStr)
+		if err != nil {
+			// If parsing fails, return the original match (optional: log the error)
+			return match
+		}
+
+		// Convert the parsed time back to a string with the required format
+		formattedTime := parsedTime.Format(time.RFC3339) // or any other desired format
+
+		// Construct the new "field_at" string
+		newField := `"` + key + `":"` + formattedTime + `"`
+
+		// Return the newly constructed string to replace the old one
+		return []byte(newField)
+	})
+}
+
+func fetchQuery(dest interface{}) (string, bool, error) {
+	destValue := reflect.ValueOf(dest)
+	if destValue.Kind() == reflect.Ptr {
+		destValue = destValue.Elem()
+	}
+
+	if destValue.Kind() == reflect.Slice {
+		// Handle slice case
+		if destValue.Len() > 0 {
+			elem := destValue.Index(0).Interface()
+			if model, ok := elem.(Model); ok {
+				return model.FetchQuery(), true, nil
+			}
+		}
+
+		// Create a default instance if the slice is empty
+		elemType := destValue.Type().Elem()
+		zeroElem := reflect.New(elemType).Elem()
+		if model, ok := zeroElem.Interface().(Model); ok {
+			return model.FetchQuery(), true, nil
+		}
+	} else if model, ok := dest.(Model); ok {
+		// Handle single instance case
+		return model.FetchQuery(), false, nil
+	}
+
+	return "", false, fmt.Errorf("can not cast %T refrence to Model", dest)
 }

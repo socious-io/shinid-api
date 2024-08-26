@@ -36,9 +36,33 @@ func schemaGroup() {
 			req.Header.Set("Authorization", authTokens[0])
 			router.ServeHTTP(w, req)
 			body := decodeBody(w.Body)
-			fmt.Println(body, "-----@@@@@------")
 			Expect(body["id"]).To(Equal(data["id"]))
 			Expect(w.Code).To(Equal(200))
 		}
 	})
+
+	It("it should get schemas", func() {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/credentials/schemas", nil)
+		req.Header.Set("Authorization", authTokens[0])
+		router.ServeHTTP(w, req)
+		// body := decodeBody(w.Body)
+		// fmt.Println(body["results"])
+		// Expect(body["id"]).To(Equal(data["id"]))
+		Expect(w.Code).To(Equal(200))
+	})
+
+	It("it should delete schemas", func() {
+		for _, data := range schemasData {
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("DELETE", fmt.Sprintf("/credentials/schemas/%s", data["id"]), nil)
+			req.Header.Set("Authorization", authTokens[0])
+			router.ServeHTTP(w, req)
+			body := decodeBody(w.Body)
+			fmt.Println(body)
+			// Expect(body["id"]).To(Equal(data["id"]))
+			Expect(w.Code).To(Equal(200))
+		}
+	})
+
 }

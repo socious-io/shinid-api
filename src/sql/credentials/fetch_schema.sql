@@ -7,7 +7,7 @@ SELECT
           'name', name,
           'description', description,
           'type', type,
-          'created_at', created_at::timestamptz
+          'created_at', created_at
         ))
         FROM credential_attributes ca
         WHERE ca.schema_id=cs.id

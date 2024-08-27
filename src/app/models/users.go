@@ -6,37 +6,32 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 )
 
 type User struct {
-	ID              uuid.UUID `db:"id" json:"id"`
-	Username        string    `db:"username" json:"username"`
-	Email           string    `db:"email" json:"email"`
-	Password        *string   `db:"password" json:"-"`
-	JobTitle        *string   `db:"job_title" json:"job_title"`
-	Bio             *string   `db:"bio" json:"-"`
-	FirstName       *string   `db:"first_name" json:"first_name"`
-	LastName        *string   `db:"last_name" json:"last_name"`
-	Phone           *string   `db:"phone" json:"phone"`
-	AvatarID        uuid.UUID `db:"avatar_id" json:"avatar_id"`
-	Status          string    `db:"status" json:"status"`
-	PasswordExpired bool      `db:"password_expired" json:"password_expired"`
+	ID              uuid.UUID  `db:"id" json:"id"`
+	Username        string     `db:"username" json:"username"`
+	Email           string     `db:"email" json:"email"`
+	Password        *string    `db:"password" json:"-"`
+	JobTitle        *string    `db:"job_title" json:"job_title"`
+	Bio             *string    `db:"bio" json:"-"`
+	FirstName       *string    `db:"first_name" json:"first_name"`
+	LastName        *string    `db:"last_name" json:"last_name"`
+	Phone           *string    `db:"phone" json:"phone"`
+	AvatarID        *uuid.UUID `db:"avatar_id" json:"avatar_id"`
+	Status          string     `db:"status" json:"status"`
+	PasswordExpired bool       `db:"password_expired" json:"password_expired"`
 
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
-func (*User) TableName() string {
+func (User) TableName() string {
 	return "users"
 }
 
-func (*User) FetchQuery() string {
+func (User) FetchQuery() string {
 	return "users/fetch"
-}
-
-func (u *User) Scan(rows *sqlx.Rows) error {
-	return rows.StructScan(u)
 }
 
 func (u *User) Create(ctx context.Context) error {
@@ -50,7 +45,7 @@ func (u *User) Create(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}
@@ -68,7 +63,7 @@ func (u *User) Verify(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}
@@ -86,7 +81,7 @@ func (u *User) ExpirePassword(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}
@@ -104,7 +99,7 @@ func (u *User) UpdatePassword(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}
@@ -122,7 +117,7 @@ func (u *User) UpdateProfile(ctx context.Context) error {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		if err := u.Scan(rows); err != nil {
+		if err := rows.StructScan(u); err != nil {
 			return err
 		}
 	}

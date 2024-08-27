@@ -15,11 +15,11 @@ type Media struct {
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
 
-func (*Media) TableName() string {
+func (Media) TableName() string {
 	return "media"
 }
 
-func (*Media) FetchQuery() string {
+func (Media) FetchQuery() string {
 	return "media/fetch"
 }
 

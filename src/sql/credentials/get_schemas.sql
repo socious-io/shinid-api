@@ -1,0 +1,1 @@
+SELECT id, COUNT(*) OVER () as total_count FROM credential_schemas WHERE created_id = $1 LIMIT $2 OFFSET $3

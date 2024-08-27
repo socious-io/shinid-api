@@ -104,7 +104,6 @@ func authGroup(router *gin.Engine) {
 	})
 
 	g.POST("/otp", func(c *gin.Context) {
-
 		form := new(auth.OTPSendForm)
 		if err := c.ShouldBindJSON(form); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -19,11 +19,11 @@ type OTP struct {
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 }
 
-func (*OTP) TableName() string {
+func (OTP) TableName() string {
 	return "otps"
 }
 
-func (*OTP) FetchQuery() string {
+func (OTP) FetchQuery() string {
 	return "otps/fetch"
 }
 

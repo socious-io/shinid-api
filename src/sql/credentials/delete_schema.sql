@@ -1,0 +1,1 @@
+DELETE FROM credential_schemas WHERE id=$1

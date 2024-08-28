@@ -109,4 +109,4 @@ jobs:
         run: |
           docker pull ${{ steps.meta.outputs.tags }}
           docker ps -qa --filter "name=shin-api" | grep -q . && docker stop shin-api && docker rm -fv shin-api
-          docker run -d --restart always -p 5061:5061 -h shin-api --network shinapi_default --name shin-api ${{ steps.meta.outputs.tags }}
+          docker run -d --restart always -p 5062:5062 -h shin-api --network shinapi_default --name shin-api ${{ steps.meta.outputs.tags }}

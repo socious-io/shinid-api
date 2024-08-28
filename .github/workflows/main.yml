@@ -73,7 +73,6 @@ jobs:
   deploy-dev:
     needs: [test-build-dev]
     name: Deploy to Dev
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ["backend-dev-new"]
     steps:
       - name: Checkout repository

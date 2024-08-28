@@ -31,6 +31,9 @@ jobs:
           cp /etc/shin-api/test.config.yml .
           cp /etc/shin-api/config.yml .
 
+      - name: Setup Go environment
+        uses: actions/setup-go@v5.0.2
+            
       - name: Downloading dependencies
         run: |
           go mod download
@@ -87,6 +90,9 @@ jobs:
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v5.0.2
 
       - name: Run DB migrations
         run: |

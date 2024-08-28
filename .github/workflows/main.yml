@@ -33,6 +33,8 @@ jobs:
 
       - name: Setup Go environment
         uses: actions/setup-go@v5.0.2
+        with:
+          go-version: '1.22.5'
             
       - name: Downloading dependencies
         run: |
@@ -93,6 +95,8 @@ jobs:
 
       - name: Setup Go environment
         uses: actions/setup-go@v5.0.2
+        with:
+          go-version: '1.22.5'
 
       - name: Run DB migrations
         run: |

@@ -15,7 +15,7 @@ func orgGroup(router *gin.Engine) {
 	g := router.Group("organizations")
 	g.Use(auth.LoginRequired())
 
-	g.GET("/", func(c *gin.Context) {
+	g.GET("", func(c *gin.Context) {
 		u, _ := c.Get("user")
 		ctx, _ := c.Get("ctx")
 
@@ -39,7 +39,7 @@ func orgGroup(router *gin.Engine) {
 		c.JSON(http.StatusOK, org)
 	})
 
-	g.POST("/", func(c *gin.Context) {
+	g.POST("", func(c *gin.Context) {
 		form := new(OrganizationForm)
 		if err := c.ShouldBindJSON(form); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -20,7 +20,7 @@ func orgGroup() {
 		for i, data := range organizationsData {
 			w := httptest.NewRecorder()
 			reqBody, _ := json.Marshal(data)
-			req, _ := http.NewRequest("POST", "/organizations/", bytes.NewBuffer(reqBody))
+			req, _ := http.NewRequest("POST", "/organizations", bytes.NewBuffer(reqBody))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", authTokens[0])
 			router.ServeHTTP(w, req)
@@ -32,7 +32,7 @@ func orgGroup() {
 
 	It("should get organizations", func() {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/organizations/", nil)
+		req, _ := http.NewRequest("GET", "/organizations", nil)
 		req.Header.Set("Authorization", authTokens[0])
 		router.ServeHTTP(w, req)
 		body := decodeBody(w.Body)

@@ -51,6 +51,7 @@ var _ = Describe("Shin Test Suite", func() {
 	Context("Auth", authGroup)
 	Context("Organizations", orgGroup)
 	Context("Schemas", schemaGroup)
+	Context("Verifications", verificationGroup)
 })
 
 func init() {

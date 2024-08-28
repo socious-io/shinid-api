@@ -77,18 +77,12 @@ func Get(dest interface{}, queryName string, args ...interface{}) error {
 			return nil, fmt.Errorf("database not connected")
 		}
 
-		var jsonBytes []byte
-		if err := db.QueryRowx(q, args...).Scan(&jsonBytes); err != nil {
-			return nil, err
-		}
-		if err := json.Unmarshal(jsonBytes, dest); err != nil {
-			return nil, err
-		}
-
 		if err := db.Get(dest, q, args...); err != nil {
 			return nil, err
 		}
-
+		if err := UnmarshalJSONTextFields(dest); err != nil {
+			return nil, err
+		}
 		return nil, nil
 	})
 	return err
@@ -299,6 +293,9 @@ func UnmarshalJSONTextFields(input interface{}) error {
 				if targetField.Kind() == reflect.Ptr && targetFieldType.Type.Kind() == reflect.Ptr {
 					targetField.Set(reflect.New(targetFieldType.Type.Elem())) // Initialize the struct pointer
 					data := []byte(field.Interface().(types.JSONText))
+					if len(data) < 1 {
+						continue
+					}
 					data = preprocessJSONDatetimes(data)
 					// Unmarshal into the corresponding field
 					err := json.Unmarshal(data, targetField.Interface())
@@ -314,6 +311,9 @@ func UnmarshalJSONTextFields(input interface{}) error {
 					// Create a new slice with the appropriate type
 					slicePtr := reflect.New(reflect.SliceOf(sliceType)).Interface()
 					data := []byte(field.Interface().(types.JSONText))
+					if len(data) < 1 {
+						continue
+					}
 					data = preprocessJSONDatetimes(data)
 					// Unmarshal into the slice
 					err := json.Unmarshal(data, slicePtr)

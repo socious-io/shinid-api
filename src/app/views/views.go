@@ -8,4 +8,5 @@ func Init(r *gin.Engine) {
 	userGroup(r)
 	credntialsGroup(r)
 	rootGroup(r)
+	verificationsGroup(r)
 }

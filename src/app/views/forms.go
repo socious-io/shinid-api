@@ -8,7 +8,7 @@ import (
 
 type OrganizationForm struct {
 	Name        string     `json:"name" validate:"required,min=3,max=32"`
-	Description string     `json:"description" validate:"required,min=3,max=32"`
+	Description string     `json:"description" validate:"required,min=3"`
 	LogoID      *uuid.UUID `json:"logo_id"`
 }
 
@@ -23,11 +23,17 @@ type SchemaForm struct {
 	} `json:"attributes"`
 }
 
+type VerificationForm struct {
+	Name        string    `json:"name" validate:"required,min=3,max=32"`
+	Description *string   `json:"description" validate:"required,min=3"`
+	SchemaID    uuid.UUID `json:"schema_id" validate:"required"`
+}
+
 type ProfileUpdateForm struct {
-	Username  string  `db:"username" json:"username"`
-	JobTitle  *string `db:"job_title" json:"job_title"`
-	Bio       *string `db:"bio" json:"bio"`
-	FirstName *string `db:"first_name" json:"first_name"`
-	LastName  *string `db:"last_name" json:"last_name"`
-	Phone     *string `db:"phone" json:"phone"`
+	Username  string  `json:"username"`
+	JobTitle  *string `json:"job_title"`
+	Bio       *string `json:"bio"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Phone     *string `json:"phone"`
 }

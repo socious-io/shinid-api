@@ -1,0 +1,1 @@
+DELETE FROM credential_verifications WHERE id=$1

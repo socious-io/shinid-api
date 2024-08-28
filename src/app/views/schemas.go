@@ -13,10 +13,10 @@ import (
 )
 
 func credntialsGroup(router *gin.Engine) {
-	g := router.Group("credentials")
+	g := router.Group("schemas")
 	g.Use(auth.LoginRequired())
 
-	g.GET("/schemas", paginate(), func(c *gin.Context) {
+	g.GET("", paginate(), func(c *gin.Context) {
 		u, _ := c.Get("user")
 		page, _ := c.Get("paginate")
 		schemas, total, err := models.GetSchemas(u.(*models.User).ID, page.(database.Paginate))
@@ -29,7 +29,7 @@ func credntialsGroup(router *gin.Engine) {
 		})
 	})
 
-	g.GET("/schemas/:id", func(c *gin.Context) {
+	g.GET("/:id", func(c *gin.Context) {
 		id := c.Param("id")
 		// u, _ := c.Get("user")
 		s, err := models.GetSchema(uuid.MustParse(id))
@@ -39,7 +39,7 @@ func credntialsGroup(router *gin.Engine) {
 		c.JSON(http.StatusOK, s)
 	})
 
-	g.POST("/schemas", func(c *gin.Context) {
+	g.POST("", func(c *gin.Context) {
 		form := new(SchemaForm)
 		if err := c.ShouldBindJSON(form); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -57,7 +57,7 @@ func credntialsGroup(router *gin.Engine) {
 		c.JSON(http.StatusCreated, s)
 	})
 
-	g.DELETE("/schemas/:id", func(c *gin.Context) {
+	g.DELETE("/:id", func(c *gin.Context) {
 		id := c.Param("id")
 		u, _ := c.Get("user")
 		s, err := models.GetSchema(uuid.MustParse(id))

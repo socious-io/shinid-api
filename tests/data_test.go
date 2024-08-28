@@ -20,6 +20,11 @@ var (
 		{"name": "test", "description": "test desc"},
 	}
 
+	verificationsData = []gin.H{
+		{"name": "test", "description": "test desc"},
+		{"name": "test 2", "description": "test 2 desc"},
+	}
+
 	schemasData = []gin.H{
 		{"name": "test", "description": "test desc", "public": false, "attributes": []gin.H{
 			{"name": "test_field", "description": "desc of field", "type": "TEXT"},

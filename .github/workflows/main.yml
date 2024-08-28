@@ -21,9 +21,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.5' # The Go version to download (if necessary) and use.
+
       - name: Copying test environment
         run: |
           cp /etc/shin-api/test.config.yml .
+
+      - name: Downloading dependencies
+        run: |
+          go mod download
 
       - name: Running integration/unit tests
         run: |

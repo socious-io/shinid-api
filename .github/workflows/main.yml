@@ -15,33 +15,39 @@ env:
 jobs:
 
   test-build-dev:
-    if:  github.event_name == 'push'
+    needs: [test-dev]
     name: Test & Build for Development env
+    # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ["backend-dev"]
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Copying test environment
-        run: |
-          cp /etc/shin-api/test.config.yml .
 
       - name: Setup Go environment
         uses: actions/setup-go@v5.0.2
         with:
           go-version: '1.22.5'
-            
+
+      - name: Copying build & test environment
+        run: |
+          cp /etc/shin-api/config.yml .
+          cp /etc/shin-api/test.config.yml .
+
       - name: Downloading dependencies
         run: |
-          go mod download
+          go mod download 
 
-      - name: Running integration/unit tests
+      - name: Running tests
         run: |
           go test -v ./tests
+
+      - name: Run DB migrations
+        run: |
+          go run cmd/migrate/main.go up
+
+      - name: Building
+        run: |
+          go run cmd/migrate/main.go up
 
       - name: Docker Setup Buildx
         uses: docker/setup-buildx-action@v3.6.1
@@ -77,7 +83,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3.2.0
@@ -91,19 +97,6 @@ jobs:
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Setup Go environment
-        uses: actions/setup-go@v5.0.2
-        with:
-          go-version: '1.22.5'
-
-      - name: Copying build environment
-        run: |
-          cp /etc/shin-api/config.yml .
-
-      - name: Run DB migrations
-        run: |
-          go run cmd/migrate/main.go up
 
       - name: Docker run
         run: |

@@ -26,5 +26,5 @@ func Init() *gin.Engine {
 
 func Serve() {
 	router := Init()
-	router.Run(fmt.Sprintf("127.0.0.1:%d", config.Config.Port))
+	router.Run(fmt.Sprintf("0.0.0.0:%d", config.Config.Port))
 }

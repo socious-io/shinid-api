@@ -5,5 +5,4 @@ WORKDIR /app
 COPY . .
 RUN go mod download
 RUN go build -C cmd/app -o ../../build
-
 CMD ["./build"]

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"shin/src/app/models"
 
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -26,19 +27,17 @@ func authGroup() {
 		authRefreshTokens = append(authRefreshTokens, body["refresh_token"].(string))
 	})
 
-	/*
-		AS IT SENDING EMAIL THI API MUST NOT CALL IN TESTS
-		It("Should return status 200", func() {
-			w := httptest.NewRecorder()
-			reqBody, _ := json.Marshal(gin.H{"email": usersData[0]["email"]})
-			req, _ := http.NewRequest("POST", "/auth/otp", bytes.NewBuffer(reqBody))
-			req.Header.Set("Content-Type", "application/json")
-			router.ServeHTTP(w, req)
-			body := decodeBody(w.Body)
-			Expect(w.Code).To(Equal(200))
-		}) */
+	// AS IT SENDING EMAIL THI API MUST NOT CALL IN TESTS
+	It("Should return status 200", func() {
+		w := httptest.NewRecorder()
+		reqBody, _ := json.Marshal(gin.H{"email": usersData[0]["email"]})
+		req, _ := http.NewRequest("POST", "/auth/otp", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+		Expect(w.Code).To(Equal(200))
+	})
 
-	/* It("Should return status 200 with jwt tokens", func() {
+	It("Should return status 200 with jwt tokens", func() {
 		//Get OTP
 		otp := new(models.OTP)
 		db.Get(otp, "SELECT * FROM otps LIMIT 1")
@@ -49,12 +48,11 @@ func authGroup() {
 		router.ServeHTTP(w, req)
 
 		body := decodeBody(w.Body)
-		fmt.Println(body)
 		Expect(w.Code).To(Equal(200))
 		bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>"})
-	}) */
+	})
 
-	/* It("Should return status 200 with email and username avalibility status as existed", func() {
+	It("Should return status 200 with email and username avalibility status as existed", func() {
 		w := httptest.NewRecorder()
 		reqBody, _ := json.Marshal(gin.H{"email": usersData[0]["email"], "username": usersData[0]["username"]})
 		req, _ := http.NewRequest("POST", "/auth/pre-register", bytes.NewBuffer(reqBody))
@@ -64,9 +62,9 @@ func authGroup() {
 		body := decodeBody(w.Body)
 		Expect(w.Code).To(Equal(200))
 		bodyExpect(body, gin.H{"email": "EXISTS", "username": "EXISTS"})
-	}) */
+	})
 
-	/* It("Should return status 200 and create otp tokens", func() {
+	It("Should return status 200 and create otp tokens", func() {
 		w := httptest.NewRecorder()
 		reqBody, _ := json.Marshal(gin.H{"email": usersData[0]["email"]})
 		req, _ := http.NewRequest("POST", "/auth/password/forget", bytes.NewBuffer(reqBody))
@@ -76,7 +74,7 @@ func authGroup() {
 		body := decodeBody(w.Body)
 		Expect(w.Code).To(Equal(200))
 		bodyExpect(body, gin.H{})
-	}) */
+	})
 
 	It("Should return status 200 and update password", func() {
 		w := httptest.NewRecorder()

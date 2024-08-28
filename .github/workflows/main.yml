@@ -14,31 +14,9 @@ env:
 
 jobs:
 
-  test:
+  test-build-dev:
     if:  github.event_name == 'push'
-    runs-on: ["backend-dev"]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.22.5' # The Go version to download (if necessary) and use.
-
-      - name: Copying test environment
-        run: |
-          cp /etc/shin-api/test.config.yml .
-
-      - name: Downloading dependencies
-        run: |
-          go mod download
-
-      - name: Running integration/unit tests
-        run: |
-          go test -v ./tests
-
-  build-dev:
-    if:  github.event_name == 'push'
+    name: Test & Build for Development env
     runs-on: ["backend-dev"]
     needs: test
     permissions:
@@ -48,7 +26,20 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Copying test and build environment
+        run: |
+          cp /etc/shin-api/test.config.yml .
+          cp /etc/shin-api/config.yml .
+
+      - name: Downloading dependencies
+        run: |
+          go mod download
+
+      - name: Running integration/unit tests
+        run: |
+          go test -v ./tests
 
       - name: Docker Setup Buildx
         uses: docker/setup-buildx-action@v3.6.1
@@ -75,3 +66,36 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-dev:
+    needs: [test-build-dev]
+    name: Deploy to Dev
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ["backend-dev-new"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Run DB migrations
+        run: |
+          go run cmd/migrate/main.go up
+
+      - name: Docker run
+        run: |
+          docker pull ${{ steps.meta.outputs.tags }}
+          docker ps -qa --filter "name=shin-api" | grep -q . && docker stop shin-api && docker rm -fv shin-api
+          docker run -d --restart always -p 5061:5061 -h shin-api --network shinapi_default --name shin-api ${{ steps.meta.outputs.tags }}

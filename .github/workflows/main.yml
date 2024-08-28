@@ -16,7 +16,7 @@ jobs:
 
   test:
     if:  github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ["backend-dev"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

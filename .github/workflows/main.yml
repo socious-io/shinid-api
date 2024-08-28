@@ -15,7 +15,6 @@ env:
 jobs:
 
   test-build-dev:
-    needs: [test-dev]
     name: Test & Build for Development env
     # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ["backend-dev"]

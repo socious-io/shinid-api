@@ -26,10 +26,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Copying test and build environment
+      - name: Copying test environment
         run: |
           cp /etc/shin-api/test.config.yml .
-          cp /etc/shin-api/config.yml .
 
       - name: Setup Go environment
         uses: actions/setup-go@v5.0.2
@@ -97,6 +96,10 @@ jobs:
         uses: actions/setup-go@v5.0.2
         with:
           go-version: '1.22.5'
+
+      - name: Copying build environment
+        run: |
+          cp /etc/shin-api/config.yml .
 
       - name: Run DB migrations
         run: |

@@ -2,9 +2,9 @@ name: CI/CD Production Env
 
 on:
   push:
-    branches: ["production", "feat/automation/add-workflows-docker"]
+    branches: ["production"]
   # pull_request:
-  #   branches: ["main"]
+  #   branches: ["production"]
 
 env:
   REGISTRY: ghcr.io

@@ -2,7 +2,7 @@ name: CI/CD Development Env
 
 on:
   push:
-    branches: ["main", "feat/automation/add-workflows-docker"]
+    branches: ["main"]
   # pull_request:
   #   branches: ["main"]
 

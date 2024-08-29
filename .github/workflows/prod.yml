@@ -1,8 +1,8 @@
-name: CI/CD Development Env
+name: CI/CD Production Env
 
 on:
   push:
-    branches: ["main", "feat/automation/add-workflows-docker"]
+    branches: ["production", "feat/automation/add-workflows-docker"]
   # pull_request:
   #   branches: ["main"]
 
@@ -13,11 +13,10 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-
-  test-build-dev:
-    name: Test & Build for Development env
+  test-build:
+    name: Test & Build for Production env
     # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ["backend-dev"]
+    runs-on: ["backend-prod"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -70,11 +69,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  deploy-dev:
-    needs: [test-build-dev]
-    name: Deploy to Dev
+  deploy:
+    needs: [test-build]
+    name: Deploy to Production
     # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ["backend-dev"]
+    runs-on: ["backend-prod"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

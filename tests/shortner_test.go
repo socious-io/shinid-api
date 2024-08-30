@@ -2,6 +2,7 @@ package tests_test
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"shin/src/shortner"
@@ -14,9 +15,9 @@ func shortnerGroup() {
 	var shortLinks []*shortner.ShortnerURL
 	It("should create shortner", func() {
 		for _, url := range shorteningURLs {
-			s := &shortner.ShortnerURL{LongURL: url}
-			if err := s.Create(); err != nil {
-				continue
+			s, err := shortner.New(url)
+			if err != nil {
+				log.Fatalf("Shortner error : %v", err)
 			}
 			shortLinks = append(shortLinks, s)
 		}

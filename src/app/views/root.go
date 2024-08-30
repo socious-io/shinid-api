@@ -2,7 +2,7 @@ package views
 
 import (
 	"net/http"
-	"shin/src/app/shortner"
+	"shin/src/shortner"
 
 	"github.com/gin-gonic/gin"
 )

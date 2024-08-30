@@ -103,7 +103,7 @@ func (m *OrganizationMember) Scan(rows *sqlx.Rows) error {
 
 func GetOrg(id uuid.UUID) (*Organization, error) {
 	o := new(Organization)
-	if err := database.Fetch(o, id.String()); err != nil {
+	if err := database.Fetch(o, id); err != nil {
 		return nil, err
 	}
 	return o, nil

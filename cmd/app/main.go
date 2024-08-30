@@ -2,9 +2,9 @@ package main
 
 import (
 	"shin/src/app"
-	"shin/src/app/services"
 	"shin/src/config"
 	"shin/src/database"
+	"shin/src/services"
 	"time"
 )
 

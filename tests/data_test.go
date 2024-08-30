@@ -35,4 +35,9 @@ var (
 			{"name": "test_field_2", "description": "desc of field2", "type": "TEXT"},
 		}},
 	}
+
+	shorteningURLs = []string{
+		"https://google.com",
+		"https://app.socious.io",
+	}
 )

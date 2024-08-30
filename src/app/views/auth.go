@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
-	"shin/src/app/services"
 	"shin/src/config"
+	"shin/src/services"
 	"shin/src/utils"
 	"strconv"
 

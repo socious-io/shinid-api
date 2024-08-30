@@ -1,0 +1,1 @@
+SELECT * FROM urls_shortens WHERE id IN(?)

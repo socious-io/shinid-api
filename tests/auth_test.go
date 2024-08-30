@@ -27,7 +27,6 @@ func authGroup() {
 		authRefreshTokens = append(authRefreshTokens, body["refresh_token"].(string))
 	})
 
-	// AS IT SENDING EMAIL THI API MUST NOT CALL IN TESTS
 	It("Should return status 200", func() {
 		w := httptest.NewRecorder()
 		reqBody, _ := json.Marshal(gin.H{"email": usersData[0]["email"]})

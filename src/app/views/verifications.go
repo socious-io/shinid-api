@@ -2,7 +2,6 @@ package views
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
@@ -21,7 +20,6 @@ func verificationsGroup(router *gin.Engine) {
 		page, _ := c.Get("paginate")
 		verifications, total, err := models.GetVerifications(u.(*models.User).ID, page.(database.Paginate))
 		if err != nil {
-			fmt.Println(err, "----------")
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

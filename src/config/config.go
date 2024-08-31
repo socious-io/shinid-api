@@ -23,11 +23,9 @@ type ConfigType struct {
 		ApiKey string `mapstructure:"api_key"`
 	} `mapstructure:"sendgrid"`
 	Wellet struct {
-		Agent                 string `mapstructure:"agent"`
-		AgentApiKey           string `mapstructure:"agent_api_key"`
-		Connect               string `mapstructure:"connect"`
-		VerificationsCallback string `mapstructure:"verifications_callback"`
-		CredentialsCallback   string `mapstructure:"credentials_callback"`
+		Agent       string `mapstructure:"agent"`
+		AgentApiKey string `mapstructure:"agent_api_key"`
+		Connect     string `mapstructure:"connect"`
 	} `mapstructure:"wallet"`
 }
 

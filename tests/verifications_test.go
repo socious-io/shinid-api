@@ -55,6 +55,20 @@ func verificationGroup() {
 			Expect(w.Code).To(Equal(200))
 		}
 	})
+
+	It("it should get verification with connection", func() {
+		for _, data := range verificationsData {
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", fmt.Sprintf("/verifications/%s/connect", data["id"]), nil)
+			req.Header.Set("Authorization", authTokens[0])
+			router.ServeHTTP(w, req)
+			body := decodeBody(w.Body)
+			Expect(body["id"]).To(Equal(data["id"]))
+			// Expect(body["connection_url"]).To(Not(nil))
+			Expect(w.Code).To(Equal(200))
+		}
+	})
+
 	It("it should get verirications", func() {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/verifications", nil)

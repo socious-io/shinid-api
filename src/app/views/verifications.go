@@ -2,11 +2,14 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
 	"shin/src/database"
 	"shin/src/utils"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -29,7 +32,43 @@ func verificationsGroup(router *gin.Engine) {
 		})
 	})
 
-	g.GET("/:id", func(c *gin.Context) {
+	g.GET("/:id", auth.LoginRequired(), func(c *gin.Context) {
+		id := c.Param("id")
+		v, err := models.GetVerification(uuid.MustParse(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, v)
+	})
+
+	g.GET("/:id/connect", auth.LoginRequired(), func(c *gin.Context) {
+		id := c.Param("id")
+		v, err := models.GetVerification(uuid.MustParse(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if v.ConnectionURL != nil {
+			duration := time.Now().Sub(*v.ConnectionAt)
+			if duration < 2*time.Minute {
+				c.JSON(http.StatusOK, v)
+				return
+			}
+		}
+		ctx, _ := c.Get("ctx")
+		domain := fmt.Sprintf("%s%s", c.Request.Proto, c.Request.Host)
+		callback := strings.ReplaceAll(c.Request.URL.String(), "connect", "callback")
+
+		if err := v.NewConnection(ctx.(context.Context), domain, callback); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, v)
+	})
+
+	g.GET("/:id/callback", auth.LoginRequired(), func(c *gin.Context) {
 		id := c.Param("id")
 		v, err := models.GetVerification(uuid.MustParse(id))
 		if err != nil {

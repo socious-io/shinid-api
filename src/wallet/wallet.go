@@ -40,6 +40,7 @@ func CreateDID() (string, error) {
 	didRes, err := makeRequest("/cloud-agent/did-registrar/dids", H{
 		"documentTemplate": documentTemplate,
 	})
+
 	if err != nil {
 		return "", err
 	}
@@ -68,7 +69,7 @@ func CreateDID() (string, error) {
 	return didRef, nil
 }
 
-func CreateConnection() (*Connect, error) {
+func CreateConnection(callback string) (*Connect, error) {
 	res, err := makeRequest("/cloud-agent/connections", H{"label": "Shin connection"})
 	if err != nil {
 		return nil, err
@@ -77,14 +78,15 @@ func CreateConnection() (*Connect, error) {
 	if err := json.Unmarshal(res, &body); err != nil {
 		return nil, err
 	}
-	data := body["data"].(H)
+	url := strings.ReplaceAll(
+		body["invitation"].(map[string]interface{})["invitationUrl"].(string),
+		"https://my.domain.com/path",
+		config.Config.Wellet.Connect,
+	)
+	url += fmt.Sprintf("&callback=%s", callback)
 	c := &Connect{
-		ID: data["connectionId"].(string),
-		URL: strings.ReplaceAll(
-			data["invitation"].(H)["invitationUrl"].(string),
-			"https://my.domain.com/path",
-			config.Config.Wellet.Connect,
-		),
+		ID:  body["connectionId"].(string),
+		URL: url,
 	}
 	short, err := shortner.New(c.URL)
 	if err != nil {
@@ -165,7 +167,6 @@ func makeRequest(path string, body H) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
 	respBody := new(bytes.Buffer)
 	respBody.ReadFrom(resp.Body)
 	return respBody.Bytes(), nil

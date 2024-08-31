@@ -2,7 +2,9 @@ package models
 
 import (
 	"context"
+	"net/url"
 	"shin/src/database"
+	"shin/src/wallet"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,9 +22,13 @@ type Verification struct {
 	ConnectionID  *string        `db:"connection_id" json:"connection_id"`
 	ConnectionURL *string        `db:"connection_url" json:"connection_url"`
 	Body          types.JSONText `db:"body" json:"body"`
-	VerifiedAt    *time.Time     `db:"verified_at" json:"verified_at"`
-	UpdatedAt     time.Time      `db:"updated_at" json:"updated_at"`
-	CreatedAt     time.Time      `db:"created_at" json:"created_at"`
+
+	Status CredentialStatusType `db:"status" json:"status"`
+
+	ConnectionAt *time.Time `db:"connection_at" json:"connection_at"`
+	VerifiedAt   *time.Time `db:"verified_at" json:"verified_at"`
+	UpdatedAt    time.Time  `db:"updated_at" json:"updated_at"`
+	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
 
 	UserJson   types.JSONText `db:"user" json:"-"`
 	SchemaJson types.JSONText `db:"schema" json:"-"`
@@ -59,6 +65,29 @@ func (v *Verification) Update(ctx context.Context) error {
 		ctx,
 		"credentials/update_verification",
 		v.ID, v.Name, v.Description, v.UserID, v.SchemaID,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.StructScan(v); err != nil {
+			return err
+		}
+	}
+	return database.Fetch(v, v.ID)
+}
+
+func (v *Verification) NewConnection(ctx context.Context, domain, callback string) error {
+	conn, err := wallet.CreateConnection(callback)
+	if err != nil {
+		return err
+	}
+	connectURL, _ := url.JoinPath(domain, conn.ShortID)
+	rows, err := database.Query(
+		ctx,
+		"credentials/update_connection_verification",
+		v.ID, conn.ID, connectURL,
 	)
 	if err != nil {
 		return err

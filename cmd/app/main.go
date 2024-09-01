@@ -18,6 +18,7 @@ func main() {
 		Timeout:     5 * time.Second,
 	})
 	services.InitSendGridService()
+	services.InitS3Service()
 
 	app.Serve()
 }

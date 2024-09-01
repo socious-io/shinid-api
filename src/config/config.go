@@ -28,6 +28,13 @@ type ConfigType struct {
 		AgentApiKey string `mapstructure:"agent_api_key"`
 		Connect     string `mapstructure:"connect"`
 	} `mapstructure:"wallet"`
+	S3 struct {
+		AccessKeyId     string `mapstructure:"access_key_id"`
+		SecretAccessKey string `mapstructure:"secret_access_key"`
+		DefaultRegion   string `mapstructure:"default_region"`
+		Bucket          string `mapstructure:"bucket"`
+		CDNUrl          string `mapstructure:"cdn_url"`
+	} `mapstructure:"s3"`
 }
 
 func Init(configPath string) {

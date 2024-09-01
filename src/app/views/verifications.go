@@ -2,10 +2,11 @@ package views
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"net/url"
 	"shin/src/app/auth"
 	"shin/src/app/models"
+	"shin/src/config"
 	"shin/src/database"
 	"shin/src/utils"
 	"strings"
@@ -50,17 +51,16 @@ func verificationsGroup(router *gin.Engine) {
 			return
 		}
 		if v.ConnectionURL != nil {
-			duration := time.Now().Sub(*v.ConnectionAt)
-			if duration < 2*time.Minute {
+			if time.Since(*v.ConnectionAt) < 2*time.Minute {
 				c.JSON(http.StatusOK, v)
 				return
 			}
 		}
 		ctx, _ := c.Get("ctx")
-		domain := fmt.Sprintf("%s%s", c.Request.Proto, c.Request.Host)
-		callback := strings.ReplaceAll(c.Request.URL.String(), "connect", "callback")
 
-		if err := v.NewConnection(ctx.(context.Context), domain, callback); err != nil {
+		callback, _ := url.JoinPath(config.Config.Host, strings.ReplaceAll(c.Request.URL.String(), "connect", "callback"))
+
+		if err := v.NewConnection(ctx.(context.Context), callback); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -72,6 +72,27 @@ func verificationsGroup(router *gin.Engine) {
 		id := c.Param("id")
 		v, err := models.GetVerification(uuid.MustParse(id))
 		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx, _ := c.Get("ctx")
+		if err := v.ProofRequest(ctx.(context.Context)); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, v)
+	})
+
+	// HERE -----------
+	g.GET("/:id/verify", auth.LoginRequired(), func(c *gin.Context) {
+		id := c.Param("id")
+		v, err := models.GetVerification(uuid.MustParse(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx, _ := c.Get("ctx")
+		if err := v.ProofRequest(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

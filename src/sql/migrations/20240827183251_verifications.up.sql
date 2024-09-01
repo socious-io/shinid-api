@@ -6,6 +6,7 @@ CREATE TABLE credential_verifications (
   description TEXT,
   schema_id UUID NOT NULL,
   user_id UUID NOT NULL,
+  present_id TEXT,
   connection_id TEXT,
   connection_url TEXT,
   body jsonb,

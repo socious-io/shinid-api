@@ -2,7 +2,10 @@ package models
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/url"
+	"shin/src/config"
 	"shin/src/database"
 	"shin/src/wallet"
 	"time"
@@ -12,13 +15,15 @@ import (
 )
 
 type Verification struct {
-	ID            uuid.UUID      `db:"id" json:"id"`
-	Name          string         `db:"name" json:"name"`
-	Description   *string        `db:"description" json:"description"`
-	SchemaID      uuid.UUID      `db:"schema_id" json:"schema_id"`
-	Schema        *Schema        `db:"-" json:"schema"`
-	UserID        uuid.UUID      `db:"user_id" json:"user_id"`
-	User          *User          `db:"-" json:"user"`
+	ID          uuid.UUID `db:"id" json:"id"`
+	Name        string    `db:"name" json:"name"`
+	Description *string   `db:"description" json:"description"`
+	SchemaID    uuid.UUID `db:"schema_id" json:"schema_id"`
+	Schema      *Schema   `db:"-" json:"schema"`
+	UserID      uuid.UUID `db:"user_id" json:"user_id"`
+	User        *User     `db:"-" json:"user"`
+
+	PresentID     *string        `db:"present_id" json:"present_id"`
 	ConnectionID  *string        `db:"connection_id" json:"connection_id"`
 	ConnectionURL *string        `db:"connection_url" json:"connection_url"`
 	Body          types.JSONText `db:"body" json:"body"`
@@ -78,16 +83,72 @@ func (v *Verification) Update(ctx context.Context) error {
 	return database.Fetch(v, v.ID)
 }
 
-func (v *Verification) NewConnection(ctx context.Context, domain, callback string) error {
+func (v *Verification) NewConnection(ctx context.Context, callback string) error {
 	conn, err := wallet.CreateConnection(callback)
 	if err != nil {
 		return err
 	}
-	connectURL, _ := url.JoinPath(domain, conn.ShortID)
+	connectURL, _ := url.JoinPath(config.Config.Host, conn.ShortID)
 	rows, err := database.Query(
 		ctx,
 		"credentials/update_connection_verification",
 		v.ID, conn.ID, connectURL,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.StructScan(v); err != nil {
+			return err
+		}
+	}
+	return database.Fetch(v, v.ID)
+}
+
+func (v *Verification) ProofRequest(ctx context.Context) error {
+	if v.ConnectionID == nil {
+		return errors.New("connection not valid")
+	}
+	if time.Since(*v.ConnectionAt) > time.Hour {
+		return errors.New("connection expired")
+	}
+	presentID, err := wallet.ProofRequest(*v.ConnectionID)
+	if err != nil {
+		return err
+	}
+	rows, err := database.Query(
+		ctx,
+		"credentials/update_present_id_verification",
+		v.ID, presentID,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.StructScan(v); err != nil {
+			return err
+		}
+	}
+	return database.Fetch(v, v.ID)
+}
+
+func (v *Verification) ProofVerify(ctx context.Context) error {
+	if v.PresentID == nil {
+		return errors.New("need request proof present first")
+	}
+
+	vc, err := wallet.ProofVerify(*v.PresentID)
+	if err != nil {
+		return err
+	}
+	// TODO: Campare vc with schema and condition
+	vcData, _ := json.Marshal(vc)
+	rows, err := database.Query(
+		ctx,
+		"credentials/update_present_verify_verification",
+		v.ID, vcData,
 	)
 	if err != nil {
 		return err

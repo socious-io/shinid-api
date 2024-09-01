@@ -12,7 +12,8 @@ type ConfigType struct {
 	Env      string `mapstructure:"env"`
 	Port     int    `mapstructure:"port"`
 	Debug    bool   `mapstructure:"debug"`
-	Secret   string `mapstructure:"string"`
+	Secret   string `mapstructure:"secret"`
+	Host     string `mapstructure:"host"`
 	Database struct {
 		URL        string `mapstructure:"url"`
 		SqlDir     string `mapstructure:"sqldir"`

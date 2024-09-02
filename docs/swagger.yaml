@@ -1,0 +1,236 @@
+openapi: 3.0.0
+info:
+  title: Shin Project Docs
+  version: 1.0.0
+  description: Shin Project Docs
+servers:
+  - url: https://dev.shinid.com/
+    description: Development server (uses test data)
+  - url: https://api.shinid.com/
+    description: Production server (uses live data)
+  - url: http://localhost:3000/
+    description: Local server (for development perposes)
+paths:
+  /auth/login:
+    post:
+      summary: Login the user
+      description: Login the user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: 'string'
+                  example: 'example@shin.com'
+                password:
+                  type: 'string'
+                  example: 'P@$wd123'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tokens'
+  /auth/register:
+    post:
+      summary: Register the user
+      description: Register the user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: 'string'
+                  example: 'example@shin.com'
+                password:
+                  type: 'string'
+                  example: 'P@$wd123'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tokens'
+  /auth/refresh:
+    post:
+      summary: Refresh Access Token
+      description: Will refresh the user's tokens
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: 'string'
+                  example: 'example@shin.com'
+                password:
+                  type: 'string'
+                  example: 'P@$wd123'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tokens'
+  /auth/otp:
+    post:
+      summary: Send OTP
+      description: Send OTP and resend it by this API
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: 'string'
+                  example: 'example@shin.com'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+  /auth/otp/verify:
+    post:
+      summary: Verify OTP
+      description: Verify OTP and fetch the new tokens 
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: 'string'
+                  example: 'example@shin.com'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tokens'
+  /auth/password/forget:
+    post:
+      summary: Send Forget Password OTP
+      description: Send Forget Password OTP and resend it by this API
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: 'string'
+                  example: 'example@shin.com'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+  /auth/password/update:
+    post:
+      summary: Change password
+      description: Change password directly through forget password or with current password
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: 'string'
+                  required: true
+                  example: 'example@shin.com'
+                current_password:
+                  type: 'string'
+                  required: false
+                  example: 'example@shin.com'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+  /auth/pre-register:
+    post:
+      summary: Pre Register Process
+      description: Checks weather if username or email that provided is available
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: 'string'
+                  example: 'example@shin.com'
+                username:
+                  type: 'string'
+                  example: 'exampleu'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: 'string'
+                    enum:
+                      - AVAILABLE
+                      - EXISTS
+                  username:
+                    type: 'string'
+                    enum:
+                      - AVAILABLE
+                      - EXISTS
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Tokens:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+  

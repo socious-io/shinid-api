@@ -15,3 +15,12 @@ s3:
   default_region: default_region
   bucket: default_region
   cdn_url: https://BUCKET.s3.DEFAULT_REGION.amazonaws.com
+cors:
+  origins:
+    - '*'
+  methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE

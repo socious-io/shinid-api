@@ -117,9 +117,9 @@ func GetOrgByMember(id, userID uuid.UUID) (*Organization, error) {
 	return o, nil
 }
 
-func GetOrgsByMember(ctx context.Context, userID uuid.UUID) ([]Organization, error) {
+func GetOrgsByMember(userID uuid.UUID) ([]Organization, error) {
 	var orgs []Organization
-	rows, err := database.Query(ctx, "organizations/fetch_by_member", userID)
+	rows, err := database.Queryx("organizations/fetch_by_member", userID)
 	if err != nil {
 		return nil, err
 	}

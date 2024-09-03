@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"shin/src/app/auth"
@@ -16,26 +17,26 @@ import (
 	"github.com/google/uuid"
 )
 
-func verificationsGroup(router *gin.Engine) {
-	g := router.Group("verifications")
+func credentialsGroup(router *gin.Engine) {
+	g := router.Group("credentials")
 
 	g.GET("", paginate(), auth.LoginRequired(), func(c *gin.Context) {
 		u, _ := c.Get("user")
 		page, _ := c.Get("paginate")
-		verifications, total, err := models.GetVerifications(u.(*models.User).ID, page.(database.Paginate))
+		credentials, total, err := models.GetCredentials(u.(*models.User).ID, page.(database.Paginate))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"results": verifications,
+			"results": credentials,
 			"total":   total,
 		})
 	})
 
 	g.GET("/:id", auth.LoginRequired(), func(c *gin.Context) {
 		id := c.Param("id")
-		v, err := models.GetVerification(uuid.MustParse(id))
+		v, err := models.GetCredential(uuid.MustParse(id))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -45,14 +46,14 @@ func verificationsGroup(router *gin.Engine) {
 
 	g.GET("/:id/connect", func(c *gin.Context) {
 		id := c.Param("id")
-		v, err := models.GetVerification(uuid.MustParse(id))
+		cv, err := models.GetCredential(uuid.MustParse(id))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if v.ConnectionURL != nil {
-			if time.Since(*v.ConnectionAt) < 2*time.Minute {
-				c.JSON(http.StatusOK, v)
+		if cv.ConnectionURL != nil {
+			if time.Since(*cv.ConnectionAt) < 2*time.Minute {
+				c.JSON(http.StatusOK, cv)
 				return
 			}
 		}
@@ -60,23 +61,23 @@ func verificationsGroup(router *gin.Engine) {
 
 		callback, _ := url.JoinPath(config.Config.Host, strings.ReplaceAll(c.Request.URL.String(), "connect", "callback"))
 
-		if err := v.NewConnection(ctx.(context.Context), callback); err != nil {
+		if err := cv.NewConnection(ctx.(context.Context), callback); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, v)
+		c.JSON(http.StatusOK, cv)
 	})
 
 	g.GET("/:id/callback", func(c *gin.Context) {
 		id := c.Param("id")
-		v, err := models.GetVerification(uuid.MustParse(id))
+		cv, err := models.GetCredential(uuid.MustParse(id))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		ctx, _ := c.Get("ctx")
-		if err := v.ProofRequest(ctx.(context.Context)); err != nil {
+		if err := cv.Issue(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -85,85 +86,76 @@ func verificationsGroup(router *gin.Engine) {
 		})
 	})
 
-	g.GET("/:id/verify", func(c *gin.Context) {
-		id := c.Param("id")
-		v, err := models.GetVerification(uuid.MustParse(id))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ctx, _ := c.Get("ctx")
-		if err := v.ProofRequest(ctx.(context.Context)); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, v)
-	})
-
 	g.POST("", auth.LoginRequired(), func(c *gin.Context) {
-		form := new(VerificationForm)
+		form := new(CredentialForm)
 		if err := c.ShouldBindJSON(form); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		v := new(models.Verification)
-		utils.Copy(form, v)
+		cv := new(models.Credential)
+		utils.Copy(form, cv)
 		u, _ := c.Get("user")
-		v.UserID = u.(*models.User).ID
+		cv.CreatedID = u.(*models.User).ID
 		ctx, _ := c.Get("ctx")
-		if err := v.Create(ctx.(context.Context)); err != nil {
+		orgs, err := models.GetOrgsByMember(cv.CreatedID)
+		if err != nil || len(orgs) < 1 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("fetching org error :%v", err)})
+			return
+		}
+		cv.OrganizationID = orgs[0].ID
+		if err := cv.Create(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, v)
+		c.JSON(http.StatusCreated, cv)
 	})
 
 	g.PUT("/:id", auth.LoginRequired(), func(c *gin.Context) {
-		form := new(VerificationForm)
+		form := new(CredentialForm)
 		if err := c.ShouldBindJSON(form); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
 		id := c.Param("id")
-		v, err := models.GetVerification(uuid.MustParse(id))
+		cv, err := models.GetCredential(uuid.MustParse(id))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		u, _ := c.Get("user")
-		if v.UserID.String() != u.(*models.User).ID.String() {
+		if cv.CreatedID.String() != u.(*models.User).ID.String() {
 			c.JSON(http.StatusForbidden, gin.H{"error": "not allow"})
 			return
 		}
 
-		if v.VerifiedAt != nil {
-			form.SchemaID = v.SchemaID
+		if cv.Status == models.StatusClaimed {
+			c.JSON(http.StatusForbidden, gin.H{"error": "no update allowed after claim"})
+			return
 		}
-		utils.Copy(form, v)
+		utils.Copy(form, cv)
 
 		ctx, _ := c.Get("ctx")
-		if err := v.Update(ctx.(context.Context)); err != nil {
+		if err := cv.Update(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusAccepted, v)
+		c.JSON(http.StatusAccepted, cv)
 	})
 
 	g.DELETE("/:id", auth.LoginRequired(), func(c *gin.Context) {
 		id := c.Param("id")
-		v, err := models.GetVerification(uuid.MustParse(id))
+		cv, err := models.GetCredential(uuid.MustParse(id))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		u, _ := c.Get("user")
-		if v.UserID.String() != u.(*models.User).ID.String() {
+		if cv.CreatedID.String() != u.(*models.User).ID.String() {
 			c.JSON(http.StatusForbidden, gin.H{"error": "not allow"})
 			return
 		}
 		ctx, _ := c.Get("ctx")
-		if err := v.Delete(ctx.(context.Context)); err != nil {
+		if err := cv.Delete(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

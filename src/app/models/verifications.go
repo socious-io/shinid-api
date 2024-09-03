@@ -28,7 +28,7 @@ type Verification struct {
 	ConnectionURL *string        `db:"connection_url" json:"connection_url"`
 	Body          types.JSONText `db:"body" json:"body"`
 
-	Status CredentialStatusType `db:"status" json:"status"`
+	Status VerificationStatusType `db:"status" json:"status"`
 
 	ConnectionAt *time.Time `db:"connection_at" json:"connection_at"`
 	VerifiedAt   *time.Time `db:"verified_at" json:"verified_at"`
@@ -98,11 +98,6 @@ func (v *Verification) NewConnection(ctx context.Context, callback string) error
 		return err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		if err := rows.StructScan(v); err != nil {
-			return err
-		}
-	}
 	return database.Fetch(v, v.ID)
 }
 
@@ -126,12 +121,7 @@ func (v *Verification) ProofRequest(ctx context.Context) error {
 		return err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		if err := rows.StructScan(v); err != nil {
-			return err
-		}
-	}
-	return database.Fetch(v, v.ID)
+	return nil
 }
 
 func (v *Verification) ProofVerify(ctx context.Context) error {
@@ -154,11 +144,6 @@ func (v *Verification) ProofVerify(ctx context.Context) error {
 		return err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		if err := rows.StructScan(v); err != nil {
-			return err
-		}
-	}
 	return database.Fetch(v, v.ID)
 }
 

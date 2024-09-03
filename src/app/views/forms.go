@@ -29,6 +29,23 @@ type VerificationForm struct {
 	SchemaID    uuid.UUID `json:"schema_id" validate:"required"`
 }
 
+type CredentialForm struct {
+	Name        string    `json:"name" validate:"required,min=3,max=32"`
+	Description *string   `json:"description" validate:"required,min=3"`
+	SchemaID    uuid.UUID `json:"schema_id" validate:"required"`
+	RecipientID uuid.UUID `json:"recipient_id" validate:"required"`
+	Claims      []struct {
+		Name  string      `json:"name" validate:"required,min=3,max=32"`
+		Value interface{} `json:"value" validate:"required"`
+	} `json:"claims" validate:"required"`
+}
+
+type RecipientForm struct {
+	FirstName string `json:"first_name" validate:"required,min=3,max=128"`
+	LastName  string `json:"last_name" validate:"required,min=3,max=128"`
+	Email     string `json:"email" validate:"required,email"`
+}
+
 type ProfileUpdateForm struct {
 	Username  string  `json:"username"`
 	JobTitle  *string `json:"job_title"`

@@ -14,6 +14,9 @@ import (
 )
 
 func authGroup() {
+
+	authExecuted = true
+
 	It("should return status 200 with jwt tokens", func() {
 		w := httptest.NewRecorder()
 		reqBody, _ := json.Marshal(usersData[0])

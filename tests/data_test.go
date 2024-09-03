@@ -40,4 +40,21 @@ var (
 		"https://google.com",
 		"https://app.socious.io",
 	}
+
+	recipientsData = []gin.H{
+		{"first_name": "testName", "last_name": "test", "email": "test@test.com"},
+		{"first_name": "testName2", "last_name": "test2", "email": "test2@test.com"},
+		{"first_name": "testName3", "last_name": "test3", "email": "test3@test.com"},
+	}
+
+	credentialsData = []gin.H{
+		{"name": "test", "description": "test desc", "claims": []gin.H{
+			{"name": "test", "value": "valTest"},
+			{"name": "test2", "value": 2},
+		}},
+		{"name": "test2", "description": "test 2 desc", "claims": []gin.H{
+			{"name": "test", "value": "valTest"},
+			{"name": "test2", "value": 2},
+		}},
+	}
 )

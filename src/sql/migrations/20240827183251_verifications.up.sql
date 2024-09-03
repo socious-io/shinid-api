@@ -1,4 +1,4 @@
-CREATE TYPE crendetials_status_type AS ENUM ('REQUESTED', 'VERIFIED', 'FAILED');
+CREATE TYPE verification_status_type AS ENUM ('REQUESTED', 'VERIFIED', 'FAILED');
 
 CREATE TABLE credential_verifications (
   id UUID NOT NULL DEFAULT public.uuid_generate_v4() PRIMARY KEY,
@@ -10,7 +10,7 @@ CREATE TABLE credential_verifications (
   connection_id TEXT,
   connection_url TEXT,
   body jsonb,
-  status crendetials_status_type NOT NULL DEFAULT 'REQUESTED',
+  status verification_status_type NOT NULL DEFAULT 'REQUESTED',
   connection_at TIMESTAMP,
   verified_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW(),

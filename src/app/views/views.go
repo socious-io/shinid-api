@@ -9,5 +9,7 @@ func Init(r *gin.Engine) {
 	credntialsGroup(r)
 	rootGroup(r)
 	verificationsGroup(r)
+	credentialsGroup(r)
+	recipientsGroup(r)
 	uploadGroup(r)
 }

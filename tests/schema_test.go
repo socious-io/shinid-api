@@ -12,7 +12,7 @@ import (
 )
 
 func schemaGroup() {
-	if focused {
+	if focused && !authExecuted {
 		authGroup()
 	}
 	It("it should create schema", func() {

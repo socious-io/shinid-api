@@ -11,43 +11,50 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func verificationGroup() {
+func credentialGroup() {
 	if focused {
+		authGroup()
+		orgGroup()
+		recipientGroup()
 		schemaGroup()
 	}
-	It("it should create verification", func() {
-		for i, data := range verificationsData {
+
+	It("it should create credential", func() {
+		for i, data := range credentialsData {
 			w := httptest.NewRecorder()
+			data["recipient_id"] = recipientsData[0]["id"]
 			data["schema_id"] = schemasData[0]["id"]
 			reqBody, _ := json.Marshal(data)
-			req, _ := http.NewRequest("POST", "/verifications", bytes.NewBuffer(reqBody))
+			req, _ := http.NewRequest("POST", "/credentials", bytes.NewBuffer(reqBody))
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", authTokens[0])
 			router.ServeHTTP(w, req)
 			body := decodeBody(w.Body)
-			verificationsData[i]["id"] = body["id"]
+			credentialsData[i]["id"] = body["id"]
 			Expect(w.Code).To(Equal(201))
 		}
 	})
 
-	It("it should update verification", func() {
-		for _, data := range verificationsData {
+	It("it should update credential", func() {
+		for i, data := range credentialsData {
 			w := httptest.NewRecorder()
-			data["schema_id"] = schemasData[0]["id"]
+			name := fmt.Sprintf("test_name_%d", i+1)
+			data["name"] = name
 			reqBody, _ := json.Marshal(data)
-			req, _ := http.NewRequest("PUT", fmt.Sprintf("/verifications/%s", data["id"]), bytes.NewBuffer(reqBody))
+			req, _ := http.NewRequest("PUT", fmt.Sprintf("/credentials/%s", data["id"]), bytes.NewBuffer(reqBody))
+			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", authTokens[0])
 			router.ServeHTTP(w, req)
 			body := decodeBody(w.Body)
-			Expect(body["id"]).To(Equal(data["id"]))
+			Expect(body["name"].(string)).To(Equal(name))
 			Expect(w.Code).To(Equal(202))
 		}
 	})
 
-	It("it should get verification", func() {
-		for _, data := range verificationsData {
+	It("it should get credential", func() {
+		for _, data := range credentialsData {
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", fmt.Sprintf("/verifications/%s", data["id"]), nil)
+			req, _ := http.NewRequest("GET", fmt.Sprintf("/credentials/%s", data["id"]), nil)
 			req.Header.Set("Authorization", authTokens[0])
 			router.ServeHTTP(w, req)
 			body := decodeBody(w.Body)
@@ -56,37 +63,35 @@ func verificationGroup() {
 		}
 	})
 
-	It("it should get verification with connection", func() {
-		for _, data := range verificationsData {
+	It("it should get credential with connection", func() {
+		for _, data := range credentialsData {
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", fmt.Sprintf("/verifications/%s/connect", data["id"]), nil)
+			req, _ := http.NewRequest("GET", fmt.Sprintf("/credentials/%s/connect", data["id"]), nil)
 			req.Header.Set("Authorization", authTokens[0])
 			router.ServeHTTP(w, req)
 			body := decodeBody(w.Body)
 			Expect(body["id"]).To(Equal(data["id"]))
-			// Expect(body["connection_url"]).To(Not(nil))
 			Expect(w.Code).To(Equal(200))
 		}
 	})
 
-	It("it should get verirications", func() {
+	It("it should get credentials", func() {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/verifications", nil)
+		req, _ := http.NewRequest("GET", "/credentials", nil)
 		req.Header.Set("Authorization", authTokens[0])
 		router.ServeHTTP(w, req)
 		body := decodeBody(w.Body)
-		Expect(int(body["total"].(float64))).To(Equal(len(verificationsData)))
+		Expect(len(body["results"].([]interface{}))).To(Equal(len(credentialsData)))
 		Expect(w.Code).To(Equal(200))
 	})
 
-	It("it should delete verification", func() {
-		for _, data := range verificationsData {
+	It("it should delete credential", func() {
+		for _, data := range credentialsData {
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("DELETE", fmt.Sprintf("/verifications/%s", data["id"]), nil)
+			req, _ := http.NewRequest("DELETE", fmt.Sprintf("/credentials/%s", data["id"]), nil)
 			req.Header.Set("Authorization", authTokens[0])
 			router.ServeHTTP(w, req)
 			Expect(w.Code).To(Equal(200))
 		}
 	})
-
 }

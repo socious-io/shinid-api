@@ -7,7 +7,6 @@ import (
 
 type AttributeType string
 
-// ENUM values
 const (
 	Text     AttributeType = "TEXT"
 	Number   AttributeType = "NUMBER"
@@ -30,13 +29,36 @@ func (a AttributeType) Value() (driver.Value, error) {
 	return string(a), nil
 }
 
+type VerificationStatusType string
+
+const (
+	StatusRequested VerificationStatusType = "REQUESTED"
+	StatusVerfied   VerificationStatusType = "VERIFIED"
+	StatusFailed    VerificationStatusType = "FAILED"
+)
+
+func (c *VerificationStatusType) Scan(value interface{}) error {
+	switch v := value.(type) {
+	case []byte:
+		*c = VerificationStatusType(string(v))
+	case string:
+		*c = VerificationStatusType(v)
+	default:
+		return fmt.Errorf("failed to scan credential type: %v", value)
+	}
+	return nil
+}
+
+func (c VerificationStatusType) Value() (driver.Value, error) {
+	return string(c), nil
+}
+
 type CredentialStatusType string
 
-// ENUM values
 const (
-	StatusRequested CredentialStatusType = "REQUESTED"
-	StatusVerfied   CredentialStatusType = "VERIFIED"
-	StatusFailed    CredentialStatusType = "FAILED"
+	StatusIssued   CredentialStatusType = "REQUESTED"
+	StatusClaimed  CredentialStatusType = "CLAIMED"
+	StatusCanceled CredentialStatusType = "CANCELED"
 )
 
 func (c *CredentialStatusType) Scan(value interface{}) error {

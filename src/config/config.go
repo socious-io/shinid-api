@@ -37,7 +37,6 @@ type ConfigType struct {
 	} `mapstructure:"s3"`
 	Cors struct {
 		Origins []string `mapstructure:"origins"`
-		Methods []string `mapstructure:"methods"`
 	} `mapstructure:"cors"`
 }
 

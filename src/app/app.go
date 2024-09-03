@@ -25,7 +25,7 @@ func Init() *gin.Engine {
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     config.Config.Cors.Origins,
-		AllowMethods:     config.Config.Cors.Methods,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))

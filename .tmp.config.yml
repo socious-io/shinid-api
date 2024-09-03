@@ -18,9 +18,3 @@ s3:
 cors:
   origins:
     - '*'
-  methods:
-    - GET
-    - POST
-    - PUT
-    - PATCH
-    - DELETE

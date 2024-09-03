@@ -8,6 +8,7 @@ import (
 	"shin/src/config"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-openapi/runtime/middleware"
 )
@@ -21,6 +22,13 @@ func Init() *gin.Engine {
 		c.Set("ctx", ctx)
 		c.Next()
 	})
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     config.Config.Cors.Origins,
+		AllowMethods:     config.Config.Cors.Methods,
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	views.Init(router)
 

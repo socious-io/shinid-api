@@ -35,6 +35,10 @@ type ConfigType struct {
 		Bucket          string `mapstructure:"bucket"`
 		CDNUrl          string `mapstructure:"cdn_url"`
 	} `mapstructure:"s3"`
+	Cors struct {
+		Origins []string `mapstructure:"origins"`
+		Methods []string `mapstructure:"methods"`
+	} `mapstructure:"cors"`
 }
 
 func Init(configPath string) {

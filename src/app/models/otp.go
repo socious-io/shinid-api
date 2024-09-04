@@ -72,11 +72,11 @@ func (o *OTP) Verify(ctx context.Context) error {
 	return nil
 }
 
-func NewOTP(ctx context.Context, userID uuid.UUID) (*OTP, error) {
+func NewOTP(ctx context.Context, userID uuid.UUID, perpose string) (*OTP, error) {
 	o := &OTP{
 		UserID:  userID,
 		Code:    int(100000 + rand.Float64()*900000),
-		Perpose: "AUTH",
+		Perpose: perpose,
 	}
 	if err := o.Create(ctx); err != nil {
 		return nil, err

@@ -2,7 +2,6 @@ package views
 
 import (
 	"context"
-	"math/rand/v2"
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
@@ -65,7 +64,7 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 
-		otp, err := models.NewOTP(ctx.(context.Context), u.ID)
+		otp, err := models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
 
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
@@ -138,7 +137,7 @@ func authGroup(router *gin.Engine) {
 
 		ctx, _ := c.Get("ctx")
 
-		otp, err := models.NewOTP(ctx.(context.Context), u.ID)
+		otp, err := models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   err.Error(),
@@ -239,13 +238,8 @@ func authGroup(router *gin.Engine) {
 
 		//Creating OTP
 		ctx, _ := c.Get("ctx")
-		otp := models.OTP{
-			UserID:  u.ID,
-			Code:    int(100000 + rand.Float64()*900000),
-			Perpose: "FORGET_PASSWORD",
-		}
-
-		if err := otp.Create(ctx.(context.Context)); err != nil {
+		otp, err := models.NewOTP(ctx.(context.Context), u.ID, "FORGET_PASSWORD")
+		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   err.Error(),
 				"message": "Couldn't save OTP",

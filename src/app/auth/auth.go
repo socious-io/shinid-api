@@ -11,11 +11,11 @@ import (
 )
 
 type RegisterForm struct {
-	FirstName string `json:"first_name" validate:"required,min=3,max=32"`
-	LastName  string `json:"last_name" validate:"required,min=3,max=32"`
-	Username  string `json:"username" validate:"required,min=3,max=32"`
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	Username  *string `json:"username"`
+	Email     string  `json:"email" validate:"required,email"`
+	Password  *string `json:"password"`
 }
 
 type LoginForm struct {

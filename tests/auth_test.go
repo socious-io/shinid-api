@@ -25,9 +25,7 @@ func authGroup() {
 		router.ServeHTTP(w, req)
 		body := decodeBody(w.Body)
 		Expect(w.Code).To(Equal(200))
-		bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>"})
-		authTokens = append(authTokens, body["access_token"].(string))
-		authRefreshTokens = append(authRefreshTokens, body["refresh_token"].(string))
+		bodyExpect(body, gin.H{"message": "success"})
 	})
 
 	It("Should return status 200", func() {
@@ -52,6 +50,8 @@ func authGroup() {
 		body := decodeBody(w.Body)
 		Expect(w.Code).To(Equal(200))
 		bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>"})
+		authTokens = append(authTokens, body["access_token"].(string))
+		authRefreshTokens = append(authRefreshTokens, body["refresh_token"].(string))
 	})
 
 	It("Should return status 200 with email and username avalibility status as existed", func() {

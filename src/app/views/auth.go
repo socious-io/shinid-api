@@ -261,7 +261,7 @@ func authGroup(router *gin.Engine) {
 
 	})
 
-	g.POST("/password/update", auth.LoginRequired(), func(c *gin.Context) {
+	g.PUT("/password", auth.LoginRequired(), func(c *gin.Context) {
 
 		ctx, _ := c.Get("ctx")
 		u, _ := c.Get("user")

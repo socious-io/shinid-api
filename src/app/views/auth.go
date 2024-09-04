@@ -320,17 +320,22 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		emailStatus := "UNKOWN"
+		usernameStatus := "UNKOWN"
 
-		u, err := models.GetUserByEmail(form.Email)
-		emailStatus := "AVAILABLE"
-		if err == nil && u.Status == "ACTIVE" {
-			emailStatus = "EXISTS"
+		if form.Email != nil {
+			u, err := models.GetUserByEmail(*form.Email)
+			emailStatus = "AVAILABLE"
+			if err == nil && u.Status == "ACTIVE" {
+				emailStatus = "EXISTS"
+			}
 		}
-
-		u, err = models.GetUserByUsername(form.Username)
-		usernameStatus := "AVAILABLE"
-		if err == nil {
-			usernameStatus = "EXISTS"
+		if form.Username != nil {
+			u, err := models.GetUserByUsername(*form.Username)
+			usernameStatus = "AVAILABLE"
+			if err == nil && u.Status == "ACTIVE" {
+				usernameStatus = "EXISTS"
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{

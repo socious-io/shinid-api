@@ -36,8 +36,8 @@ type RefreshTokenForm struct {
 }
 
 type PreRegisterForm struct {
-	Email    string `json:"email" validate:"required,email"`
-	Username string `json:"username" validate:"required"`
+	Email    *string `json:"email" validate:"email"`
+	Username *string `json:"username"`
 }
 
 type NormalPasswordChangeForm struct {

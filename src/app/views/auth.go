@@ -305,6 +305,8 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 
+		c.JSON(http.StatusAccepted, gin.H{"message": "success"})
+
 	})
 
 	g.POST("/pre-register", func(c *gin.Context) {

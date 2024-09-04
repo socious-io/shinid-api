@@ -49,7 +49,7 @@ func authGroup() {
 
 		body := decodeBody(w.Body)
 		Expect(w.Code).To(Equal(200))
-		bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>"})
+		bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>", "token_type": "Bearer"})
 		authTokens = append(authTokens, body["access_token"].(string))
 		authRefreshTokens = append(authRefreshTokens, body["refresh_token"].(string))
 	})
@@ -82,14 +82,11 @@ func authGroup() {
 		w := httptest.NewRecorder()
 		newPassword := "test1234567"
 		reqBody, _ := json.Marshal(gin.H{"current_password": usersData[0]["password"], "password": newPassword})
-		req, _ := http.NewRequest("POST", "/auth/password/update", bytes.NewBuffer(reqBody))
+		req, _ := http.NewRequest("PUT", "/auth/password", bytes.NewBuffer(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", authTokens[0]))
 		router.ServeHTTP(w, req)
-
-		body := decodeBody(w.Body)
-		Expect(w.Code).To(Equal(200))
-		bodyExpect(body, gin.H{})
+		Expect(w.Code).To(Equal(202))
 	})
 
 	It("Should return status 200 and generate jwt tokens", func() {
@@ -101,7 +98,7 @@ func authGroup() {
 
 		body := decodeBody(w.Body)
 		Expect(w.Code).To(Equal(200))
-		bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>"})
+		bodyExpect(body, gin.H{"access_token": "<ANY>", "refresh_token": "<ANY>", "token_type": "Bearer"})
 	})
 
 }

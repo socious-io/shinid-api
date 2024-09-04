@@ -47,10 +47,11 @@ type RecipientForm struct {
 }
 
 type ProfileUpdateForm struct {
-	Username  string  `json:"username"`
-	JobTitle  *string `json:"job_title"`
-	Bio       *string `json:"bio"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Phone     *string `json:"phone"`
+	Username  string     `json:"username" validate:"required,min=3,max=32"`
+	JobTitle  *string    `json:"job_title"`
+	Bio       *string    `json:"bio"`
+	FirstName string     `json:"first_name" validate:"required,min=3,max=32"`
+	LastName  string     `json:"last_name" validate:"required,min=3,max=32"`
+	Phone     *string    `json:"phone"`
+	AvatarID  *uuid.UUID `json:"avatar_id"`
 }

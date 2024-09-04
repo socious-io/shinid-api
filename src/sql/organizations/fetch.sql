@@ -1,6 +1,6 @@
 SELECT o.*,
 m.url as "logo.url",
 m.filename "logo.filename"
-FROM organizations
+FROM organizations o
 LEFT JOIN media m ON o.logo_id=m.id
-WHERE id IN(?)
+WHERE o.id IN(?)

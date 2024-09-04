@@ -1,6 +1,6 @@
 SELECT u.*,
 m.url as "avatar.url",
 m.filename "avatar.filename"
-FROM users
+FROM users u
 LEFT JOIN media m ON u.avatar_id=m.id
-WHERE id IN (?)
+WHERE u.id IN (?)

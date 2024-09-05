@@ -26,6 +26,7 @@ func Init() *gin.Engine {
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     config.Config.Cors.Origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))

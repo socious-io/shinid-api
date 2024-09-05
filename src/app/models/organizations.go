@@ -15,9 +15,13 @@ type Organization struct {
 	Name        string     `db:"name" json:"name"`
 	Description string     `db:"description" json:"description"`
 	LogoID      *uuid.UUID `db:"logo_id" json:"logo_id"`
-	IsVerified  bool       `db:"is_verified" json:"is_verified"`
-	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
-	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	Logo        struct {
+		Url      *string `db:"url" json:"url"`
+		Filename *string `db:"filename" json:"filename"`
+	} `db:"logo" json:"logo"`
+	IsVerified bool      `db:"is_verified" json:"is_verified"`
+	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
+	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 }
 
 type OrganizationMember struct {

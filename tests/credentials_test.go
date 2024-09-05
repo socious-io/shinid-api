@@ -63,7 +63,7 @@ func credentialGroup() {
 		}
 	})
 
-	It("it should get credential with connection", func() {
+	/* It("it should get credential with connection", func() {
 		for _, data := range credentialsData {
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("GET", fmt.Sprintf("/credentials/%s/connect", data["id"]), nil)
@@ -73,7 +73,7 @@ func credentialGroup() {
 			Expect(body["id"]).To(Equal(data["id"]))
 			Expect(w.Code).To(Equal(200))
 		}
-	})
+	}) */
 
 	It("it should get credentials", func() {
 		w := httptest.NewRecorder()

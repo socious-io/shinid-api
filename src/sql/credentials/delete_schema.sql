@@ -1,1 +1,1 @@
-DELETE FROM credential_schemas WHERE id=$1
+DELETE FROM credential_schemas WHERE id=$1 AND deleteable = true

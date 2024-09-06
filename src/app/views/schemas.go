@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func credntialsGroup(router *gin.Engine) {
+func schemasGroup(router *gin.Engine) {
 	g := router.Group("schemas")
 	g.Use(auth.LoginRequired())
 

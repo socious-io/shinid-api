@@ -188,7 +188,7 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 		if !otp.IsVerified {
-			c.JSON(http.StatusNotFound, gin.H{
+			c.JSON(http.StatusBadRequest, gin.H{
 				"error":   nil,
 				"message": "Code does not found or it is wrong",
 			})

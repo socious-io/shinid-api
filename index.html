@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POST Request Example</title>
+</head>
+<body>
+    <h1>POST Request Example</h1>
+    <div id="output"></div>
+
+    <script>
+        // URL of the API endpoint
+        const apiURL = 'https://dev.shinid.com/auth/pre-register';
+
+        // Data to be sent in the POST request
+        const postData = {
+            email: 'john@example.com',
+        };
+
+        // Function to send the POST request
+        async function sendPostRequest() {
+            try {
+                const response = await fetch(apiURL, {
+                    method: 'POST', // Specify the method as POST
+                    headers: {
+                        'Content-Type': 'application/json', // Set the content type to JSON
+                    },
+                    body: JSON.stringify(postData), // Convert the data to JSON string
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+
+                const data = await response.json(); // Parse the response JSON
+                document.getElementById('output').textContent = 'Success: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+            }
+        }
+
+        // Call the function to send the POST request
+        sendPostRequest();
+    </script>
+</body>
+</html>

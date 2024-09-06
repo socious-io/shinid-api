@@ -75,7 +75,7 @@ func authGroup(router *gin.Engine) {
 		}
 
 		//Sending Email
-		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
+		items := map[string]string{"code": strconv.Itoa(otp.Code)}
 		if err := services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items); err != nil && config.Config.Env != "test" {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   err.Error(),

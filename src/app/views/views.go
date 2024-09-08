@@ -11,5 +11,5 @@ func Init(r *gin.Engine) {
 	verificationsGroup(r)
 	credentialsGroup(r)
 	recipientsGroup(r)
-	uploadGroup(r)
+	mediaGroup(r)
 }

@@ -46,3 +46,11 @@ func (m *Media) Create(ctx context.Context) error {
 	}
 	return nil
 }
+
+func GetMedia(id uuid.UUID) (*Media, error) {
+	m := new(Media)
+	if err := database.Fetch(m, id); err != nil {
+		return nil, err
+	}
+	return m, nil
+}

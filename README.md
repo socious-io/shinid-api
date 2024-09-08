@@ -27,6 +27,13 @@ add your tests on `./tests/main_test.go` to main suit function
  ```
 
 
+## Services & Workers
+ **Run workers :**
+ ```
+ go run cmd/worker/main.go
+ ```
+
+
 ## Quick start
 **should take care of matching config file to related connection such as pg and nats**
 ```

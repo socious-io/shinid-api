@@ -39,6 +39,10 @@ type ConfigType struct {
 	Cors struct {
 		Origins []string `mapstructure:"origins"`
 	} `mapstructure:"cors"`
+	MQ struct {
+		Url   string `mapstructure:"url"`
+		Token string `mapstructure:"token"`
+	} `mapstructure:"mq"`
 }
 
 func Init(configPath string) {

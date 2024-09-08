@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
-	"shin/src/services"
+	"shin/src/lib"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -39,7 +39,7 @@ func mediaGroup(router *gin.Engine) {
 		}
 		defer file.Close()
 
-		mediaUrl, fileName := services.Upload(file, header.Filename)
+		mediaUrl, fileName := lib.Upload(file, header.Filename)
 
 		u, _ := c.Get("user")
 

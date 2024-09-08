@@ -1,4 +1,4 @@
-package services
+package lib
 
 import (
 	"bytes"
@@ -24,17 +24,6 @@ var mimeTypeToExt = map[string]string{
 	"application/pdf":    "pdf",
 	"application/msword": "doc",
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
-}
-
-func InitS3Service() {
-	S3Client = s3.New(s3.Options{
-		Credentials:      credentials.NewStaticCredentialsProvider(config.Config.S3.AccessKeyId, config.Config.S3.SecretAccessKey, ""),
-		Region:           config.Config.S3.DefaultRegion,
-		RetryMaxAttempts: 5,
-		RetryMode:        aws.RetryModeStandard,
-		HTTPClient:       &http.Client{Timeout: 30 * time.Second},
-		ClientLogMode:    aws.LogRequestWithBody | aws.LogResponseWithBody,
-	})
 }
 
 func hashFile(file io.Reader) (string, error) {
@@ -67,4 +56,16 @@ func Upload(file multipart.File, fileName string) (string, string) {
 	}
 
 	return fmt.Sprintf("%s/%s", config.Config.S3.CDNUrl, filename), fileName
+}
+
+// Initializing
+func InitS3Lib() {
+	S3Client = s3.New(s3.Options{
+		Credentials:      credentials.NewStaticCredentialsProvider(config.Config.S3.AccessKeyId, config.Config.S3.SecretAccessKey, ""),
+		Region:           config.Config.S3.DefaultRegion,
+		RetryMaxAttempts: 5,
+		RetryMode:        aws.RetryModeStandard,
+		HTTPClient:       &http.Client{Timeout: 30 * time.Second},
+		ClientLogMode:    aws.LogRequestWithBody | aws.LogResponseWithBody,
+	})
 }

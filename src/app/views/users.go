@@ -36,8 +36,6 @@ func userGroup(router *gin.Engine) {
 			return
 		}
 
-		c.JSON(http.StatusAccepted, gin.H{
-			"message": "success",
-		})
+		c.JSON(http.StatusAccepted, u)
 	})
 }

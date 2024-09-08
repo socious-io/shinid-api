@@ -20,12 +20,15 @@ var SendGridTemplates map[string]string = map[string]string{
 var SendGridClient SendGridType
 
 type SendGridType struct {
-	ApiKey string
-	Url    string
+	ApiKey   string
+	Url      string
+	Disabled bool
 }
 
 func (sgc *SendGridType) SendWithTemplate(address string, name string, templateId string, items map[string]string) error {
-
+	if sgc.Disabled {
+		return nil
+	}
 	//Create Mail payload
 	m := mail.NewV3Mail()
 	m.SetFrom(mail.NewEmail("Socious", "no-replay@socious.io"))
@@ -59,7 +62,8 @@ func (sgc *SendGridType) SendWithTemplate(address string, name string, templateI
 
 func InitSendGridService() {
 	SendGridClient = SendGridType{
-		ApiKey: config.Config.Sendgrid.ApiKey,
-		Url:    config.Config.Sendgrid.URL,
+		Disabled: config.Config.Sendgrid.Disabled,
+		ApiKey:   config.Config.Sendgrid.ApiKey,
+		Url:      config.Config.Sendgrid.URL,
 	}
 }

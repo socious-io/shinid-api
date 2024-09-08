@@ -266,8 +266,8 @@ func authGroup(router *gin.Engine) {
 		ctx, _ := c.Get("ctx")
 		u, _ := c.Get("user")
 		var password string
-
-		if u.(*models.User).PasswordExpired || *u.(*models.User).Password == "" {
+		user := u.(*models.User)
+		if user.PasswordExpired || user.Password == nil {
 
 			//Direct Password change
 			form := new(auth.DirectPasswordChangeForm)
@@ -290,7 +290,6 @@ func authGroup(router *gin.Engine) {
 				return
 			}
 			password = form.Password
-
 		}
 
 		newPassword, err := auth.HashPassword(password)
@@ -299,7 +298,7 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 
-		*u.(*models.User).Password = newPassword
+		user.Password = &newPassword
 		if err := u.(*models.User).UpdatePassword(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

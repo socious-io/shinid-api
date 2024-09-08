@@ -124,7 +124,7 @@ func (u *User) UpdateProfile(ctx context.Context) error {
 			return err
 		}
 	}
-	return nil
+	return database.Fetch(u, u.ID)
 }
 
 func GetUser(id uuid.UUID) (*User, error) {

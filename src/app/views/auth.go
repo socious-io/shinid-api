@@ -76,7 +76,7 @@ func authGroup(router *gin.Engine) {
 		//Sending Email
 		items := map[string]string{"code": strconv.Itoa(otp.Code)}
 		services.SendEmail(services.EmailConfig{
-			Approach:    "template",
+			Approach:    services.EmailApproachTemplate,
 			Destination: u.Email,
 			Title:       "OTP Code",
 			Template:    "otp",
@@ -148,7 +148,7 @@ func authGroup(router *gin.Engine) {
 		//Sending Email
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
 		services.SendEmail(services.EmailConfig{
-			Approach:    "template",
+			Approach:    services.EmailApproachTemplate,
 			Destination: u.Email,
 			Title:       "OTP Code",
 			Template:    "otp",
@@ -249,7 +249,7 @@ func authGroup(router *gin.Engine) {
 		//Sending Email
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
 		services.SendEmail(services.EmailConfig{
-			Approach:    "template",
+			Approach:    services.EmailApproachTemplate,
 			Destination: u.Email,
 			Title:       "Forget Password OTP Code",
 			Template:    "forget-password",

@@ -9,7 +9,6 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"shin/src/config"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,7 +16,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
+type S3ConfigType struct {
+	AccessKeyId     string
+	SecretAccessKey string
+	DefaultRegion   string
+	Bucket          string
+	CDNUrl          string
+}
+
 var S3Client *s3.Client
+var S3Config S3ConfigType
 var mimeTypeToExt = map[string]string{
 	"image/png":          "png",
 	"image/jpeg":         "jpg",
@@ -48,21 +56,23 @@ func Upload(file multipart.File, fileName string) (string, string) {
 	filename := fmt.Sprintf("%s.%s", hash, mimeTypeToExt[mimeType])
 
 	if _, err := S3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(config.Config.S3.Bucket),
+		Bucket: aws.String(S3Config.Bucket),
 		Key:    aws.String(filename),
 		Body:   bytes.NewReader(fileContent),
 	}); err != nil {
 		fmt.Println(err)
 	}
 
-	return fmt.Sprintf("%s/%s", config.Config.S3.CDNUrl, filename), fileName
+	return fmt.Sprintf("%s/%s", S3Config.CDNUrl, filename), fileName
 }
 
 // Initializing
-func InitS3Lib() {
+func InitS3Lib(configs S3ConfigType) {
+	S3Config = configs
+
 	S3Client = s3.New(s3.Options{
-		Credentials:      credentials.NewStaticCredentialsProvider(config.Config.S3.AccessKeyId, config.Config.S3.SecretAccessKey, ""),
-		Region:           config.Config.S3.DefaultRegion,
+		Credentials:      credentials.NewStaticCredentialsProvider(S3Config.AccessKeyId, S3Config.SecretAccessKey, ""),
+		Region:           S3Config.DefaultRegion,
 		RetryMaxAttempts: 5,
 		RetryMode:        aws.RetryModeStandard,
 		HTTPClient:       &http.Client{Timeout: 30 * time.Second},

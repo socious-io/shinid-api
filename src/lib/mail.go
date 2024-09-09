@@ -6,18 +6,14 @@ import (
 	"strconv"
 	"strings"
 
-	"shin/src/config"
-
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-var SendGridTemplates map[string]string = map[string]string{
-	"otp":             "d-0146441b623f4cb78833c50eb1a8c813",
-	"forget-password": "d-d7aea3b78df042e8a2fdc83953960259",
-}
-
-var SendGridClient SendGridType
+var (
+	SendGridTemplates map[string]string
+	SendGridClient    SendGridType
+)
 
 type SendGridType struct {
 	ApiKey   string
@@ -60,10 +56,7 @@ func (sgc *SendGridType) SendWithTemplate(address string, name string, templateI
 	return nil
 }
 
-func InitSendGridLib() {
-	SendGridClient = SendGridType{
-		Disabled: config.Config.Sendgrid.Disabled,
-		ApiKey:   config.Config.Sendgrid.ApiKey,
-		Url:      config.Config.Sendgrid.URL,
-	}
+func InitSendGridLib(sgc SendGridType, templates map[string]string) {
+	SendGridClient = sgc
+	SendGridTemplates = templates
 }

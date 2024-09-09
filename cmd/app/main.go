@@ -18,9 +18,16 @@ func main() {
 		Interval:    30 * time.Second,
 		Timeout:     5 * time.Second,
 	})
+
 	services.Connect()
-	lib.InitSendGridLib()
-	lib.InitS3Lib()
+
+	lib.InitS3Lib(lib.S3ConfigType{
+		AccessKeyId:     config.Config.S3.AccessKeyId,
+		SecretAccessKey: config.Config.S3.SecretAccessKey,
+		DefaultRegion:   config.Config.S3.DefaultRegion,
+		Bucket:          config.Config.S3.Bucket,
+		CDNUrl:          config.Config.S3.CDNUrl,
+	})
 
 	app.Serve()
 }

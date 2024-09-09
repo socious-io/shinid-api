@@ -8,8 +8,15 @@ import (
 
 const EmailChannel = "email"
 
+type EmailApproachType string
+
+const (
+	EmailApproachTemplate EmailApproachType = "TEMPLATE"
+	EmailApproachDirect   EmailApproachType = "DIRECT"
+)
+
 type EmailConfig struct {
-	Approach    string // [template|direct]
+	Approach    EmailApproachType
 	Destination string
 	Title       string
 	Template    string
@@ -31,7 +38,7 @@ func EmailWorker(message interface{}) {
 		args        = emailConfig.Args
 	)
 
-	if emailConfig.Approach == "template" {
+	if emailConfig.Approach == EmailApproachTemplate {
 		//Sending email with template
 		err := lib.SendGridClient.SendWithTemplate(destination, title, template, args)
 		if err != nil {

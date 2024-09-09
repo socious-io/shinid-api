@@ -57,7 +57,7 @@ func (mq *MessageQueue) sendJson(channel string, message interface{}) {
 
 func Connect() {
 
-	NatsClient, err := nats.Connect(config.Config.MQ.Url, nats.Token(config.Config.MQ.Token))
+	NatsClient, err := nats.Connect(config.Config.Nats.Url, nats.Token(config.Config.Nats.Token))
 	// defer NatsClient.Drain()
 
 	if err != nil {

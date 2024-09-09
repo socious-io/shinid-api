@@ -19,6 +19,11 @@ func main() {
 		Timeout:     5 * time.Second,
 	})
 
-	lib.InitSendGridLib()
+	lib.InitSendGridLib(lib.SendGridType{
+		Disabled: config.Config.Sendgrid.Disabled,
+		ApiKey:   config.Config.Sendgrid.ApiKey,
+		Url:      config.Config.Sendgrid.URL,
+	}, config.Config.Sendgrid.Templates)
+
 	services.Init()
 }

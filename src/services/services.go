@@ -16,6 +16,8 @@ type MessageQueue struct {
 var NatsClient *nats.Conn
 var Mq MessageQueue
 
+const ChannelDir = "shin"
+
 func (mq *MessageQueue) subscribe(channel string, consumer func(interface{})) {
 	client := mq.client
 
@@ -86,6 +88,9 @@ func Init() {
 }
 
 // Register Services
+func categorizeChannel(channel string) string {
+	return fmt.Sprintf("%s/%s", ChannelDir, channel)
+}
 func registerConsumers(Mq MessageQueue) {
-	Mq.subscribe(EmailChannel, EmailWorker)
+	Mq.subscribe(categorizeChannel(EmailChannel), EmailWorker)
 }

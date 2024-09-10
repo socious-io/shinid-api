@@ -9,6 +9,7 @@ import (
 	"shin/src/services"
 	"shin/src/utils"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -137,7 +138,18 @@ func authGroup(router *gin.Engine) {
 
 		ctx, _ := c.Get("ctx")
 
-		otp, err := models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
+		otp, err := models.GetOTPByUserID(u.ID)
+		if err == nil {
+			if time.Now().Before(otp.ExpiresAt) {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error":   "Code exists",
+					"message": "Can't send code before expiration",
+				})
+				return
+			}
+		}
+
+		otp, err = models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   err.Error(),
@@ -147,7 +159,7 @@ func authGroup(router *gin.Engine) {
 		}
 
 		//Sending Email
-		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
+		items := map[string]string{"code": strconv.Itoa(otp.Code)}
 		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
 		if err != nil && config.Config.Env != "test" {
 			c.JSON(http.StatusInternalServerError, gin.H{

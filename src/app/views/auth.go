@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
@@ -139,23 +140,26 @@ func authGroup(router *gin.Engine) {
 		ctx, _ := c.Get("ctx")
 
 		otp, err := models.GetOTPByUserID(u.ID)
-		if err == nil {
-			if time.Now().Before(otp.ExpiresAt) {
+		if err == nil && time.Now().Before(otp.ExpiresAt) {
+			if time.Now().Before(otp.SentAt.Add(2 * time.Minute)) {
+				timeRemaining := otp.SentAt.Add(2 * time.Minute).Sub(time.Now()).Round(1 * time.Second)
 				c.JSON(http.StatusBadRequest, gin.H{
 					"error":   "Code exists",
-					"message": "Can't send code before expiration",
+					"message": fmt.Sprintf("You should wait %s before sending another code", timeRemaining),
+				})
+				return
+			} else {
+				otp.UpdateSentAt(ctx.(context.Context))
+			}
+		} else {
+			otp, err = models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{
+					"error":   err.Error(),
+					"message": "Couldn't save OTP",
 				})
 				return
 			}
-		}
-
-		otp, err = models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error":   err.Error(),
-				"message": "Couldn't save OTP",
-			})
-			return
 		}
 
 		//Sending Email

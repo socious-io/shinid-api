@@ -8,6 +8,7 @@ import (
 	"shin/src/services"
 	"shin/src/utils"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -136,7 +137,18 @@ func authGroup(router *gin.Engine) {
 
 		ctx, _ := c.Get("ctx")
 
-		otp, err := models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
+		otp, err := models.GetOTPByUserID(u.ID)
+		if err == nil {
+			if time.Now().Before(otp.ExpiresAt) {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error":   "Code exists",
+					"message": "Can't send code before expiration",
+				})
+				return
+			}
+		}
+
+		otp, err = models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   err.Error(),

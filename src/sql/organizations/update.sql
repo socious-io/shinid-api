@@ -3,4 +3,5 @@ update organizations SET
   description=$3,
   logo_id=$4,
   did=$5
+  updated_at=NOW()
 WHERE id=$1

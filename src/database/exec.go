@@ -145,7 +145,6 @@ func TxExecuteQuery(tx *sqlx.Tx, queryName string, data interface{}) (sql.Result
 		if err != nil {
 			return nil, fmt.Errorf("could not load query: %v", err)
 		}
-
 		result, err = tx.NamedExec(query, data)
 		if err != nil {
 			return nil, err

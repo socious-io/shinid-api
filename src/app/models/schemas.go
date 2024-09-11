@@ -81,7 +81,11 @@ func (s *Schema) Create(ctx context.Context) error {
 		return err
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return database.Fetch(s, s.ID)
 }
 
 func GetSchema(id uuid.UUID) (*Schema, error) {

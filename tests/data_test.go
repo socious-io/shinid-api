@@ -21,8 +21,14 @@ var (
 	}
 
 	verificationsData = []gin.H{
-		{"name": "test", "description": "test desc"},
-		{"name": "test 2", "description": "test 2 desc"},
+		{"name": "test", "description": "test desc", "attributes": []gin.H{
+			{"operator": "EQUAL", "value": "test"},
+			{"operator": "EQUAL", "value": "test"},
+		}},
+		{"name": "test 2", "description": "test 2 desc", "attributes": []gin.H{
+			{"operator": "EQUAL", "value": "test"},
+			{"operator": "EQUAL", "value": "test"},
+		}},
 	}
 
 	schemasData = []gin.H{

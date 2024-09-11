@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"shin/src/app/views"
 	"shin/src/config"
+	"shin/src/lib"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -14,7 +16,13 @@ import (
 )
 
 func Init() *gin.Engine {
-	router := gin.Default()
+
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	//Set Logger
+	logger := lib.CreateGinLogger(os.Stdout, lib.LOGGER_TEXT_FORMATTER)
+	router.Use(views.GinLoggerMiddleware(logger))
 
 	router.Use(func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)

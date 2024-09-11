@@ -1,10 +1,15 @@
 package views
 
 import (
+	"bytes"
+	"io"
 	"shin/src/database"
+	"shin/src/lib"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func paginate() gin.HandlerFunc {
@@ -34,5 +39,49 @@ func paginate() gin.HandlerFunc {
 		c.Set("page", page)
 		c.Next()
 
+	}
+}
+
+// Logger
+type GinLoggerResponseWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w *GinLoggerResponseWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
+}
+
+func GinLoggerMiddleware(logger *lib.GinLogger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var requestBody []byte
+		if c.Request.Body != nil {
+			requestBody, _ = io.ReadAll(c.Request.Body)
+			c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
+		}
+
+		w := &GinLoggerResponseWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
+
+		c.Writer = w
+		start := time.Now()
+		requestId := uuid.NewString()
+
+		// Process request
+		c.Next()
+
+		logger.Auto(requestId, lib.GinLogFields{
+			Duration:       time.Since(start),
+			StatusCode:     w.Status(),
+			RequestHeaders: c.Request.Header,
+			Headers:        w.Header(),
+			RequestBody:    bytes.NewBuffer(requestBody),
+			Body:           w.body,
+			IP:             c.ClientIP(),
+			Method:         c.Request.Method,
+			Path:           c.Request.URL.Path,
+			Query:          c.Request.URL.RawQuery,
+		})
 	}
 }

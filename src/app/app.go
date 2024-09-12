@@ -22,6 +22,7 @@ func Init() *gin.Engine {
 
 	//Set Logger
 	logger := lib.CreateGinLogger(os.Stdout, lib.LOGGER_TEXT_FORMATTER)
+	logger.AddHook(lib.CreateLogrusDiscordHook(config.Config.Logger.Discord["shin_channel"]))
 	router.Use(views.GinLoggerMiddleware(logger))
 
 	router.Use(func(c *gin.Context) {

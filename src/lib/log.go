@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -21,6 +22,12 @@ var (
 	jsonFormatter *logrus.JSONFormatter = &logrus.JSONFormatter{}
 	textFormat    *logrus.TextFormatter = &logrus.TextFormatter{}
 )
+
+/*
+
+	Loggers
+
+*/
 
 // General Logger
 type Logger struct {
@@ -47,6 +54,10 @@ func (logger *Logger) Fatal(log string) {
 }
 func (logger *Logger) Panic(log string) {
 	logger.lib.Panic(log) // Calls panic() after logging
+}
+
+func (logger *Logger) AddHook(hook logrus.Hook) {
+	logger.lib.AddHook(hook)
 }
 
 func CreateLogger(output *os.File, formatter LoggerFormatterType) *Logger {
@@ -83,7 +94,7 @@ type GinLogFields struct {
 func (ginLogger *GinLogger) Auto(id string, fields GinLogFields) {
 	//Automatic Logging
 	reqLog := fmt.Sprintf("Request | %s | %s | %s | %s | %s", id, fields.Method, fields.Path, fields.RequestHeaders, fields.RequestBody.String())
-	resLog := fmt.Sprintf("Response | %s | %s | %s | %s | %s | %d | %s | %s", id, fields.Method, fields.Path, fields.Headers, fields.StatusCode, fields.Body.String(), fields.Duration)
+	resLog := fmt.Sprintf("Response | %s | %s | %s | %s | %d | %s | %s", id, fields.Method, fields.Path, fields.Headers, fields.StatusCode, fields.Body.String(), fields.Duration)
 
 	ginLogger.Info(reqLog)
 	if fields.StatusCode >= 100 {
@@ -109,4 +120,48 @@ func CreateGinLogger(output *os.File, formatter LoggerFormatterType) *GinLogger 
 	l.lib = logger
 
 	return l
+}
+
+/*
+
+	Logrus Hooks
+
+*/
+
+type LogrusDiscordHook struct {
+	WebhookURL string
+}
+
+func CreateLogrusDiscordHook(webhookURL string) *LogrusDiscordHook {
+	return &LogrusDiscordHook{WebhookURL: webhookURL}
+}
+
+func (hook *LogrusDiscordHook) Fire(entry *logrus.Entry) error {
+	logMessage, err := entry.String()
+	if err != nil {
+		return err
+	}
+
+	payload, err := json.Marshal(map[string]string{
+		"content": logMessage,
+	})
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(hook.WebhookURL, "application/json", bytes.NewBuffer(payload))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("Failed to send log to Discord, status: %s", resp.Status)
+	}
+
+	return nil
+}
+
+func (hook *LogrusDiscordHook) Levels() []logrus.Level {
+	return logrus.AllLevels
 }

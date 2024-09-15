@@ -140,18 +140,7 @@ func authGroup(router *gin.Engine) {
 		ctx, _ := c.Get("ctx")
 
 		otp, err := models.GetOTPByUserID(u.ID)
-		if err == nil && time.Now().Before(otp.ExpiresAt) {
-			if time.Now().Before(otp.SentAt.Add(2 * time.Minute)) {
-				timeRemaining := otp.SentAt.Add(2 * time.Minute).Sub(time.Now()).Round(1 * time.Second)
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error":   "Code exists",
-					"message": fmt.Sprintf("You should wait %s before sending another code", timeRemaining),
-				})
-				return
-			} else {
-				otp.UpdateSentAt(ctx.(context.Context))
-			}
-		} else {
+		if err != nil {
 			otp, err = models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
 			if err != nil {
 				c.JSON(http.StatusNotFound, gin.H{
@@ -160,6 +149,63 @@ func authGroup(router *gin.Engine) {
 				})
 				return
 			}
+		} else {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   "Threre's still a valid OTP Code try to resend it",
+				"message": "Couldn't save OTP",
+			})
+			return
+		}
+
+		//Sending Email
+		items := map[string]string{"code": strconv.Itoa(otp.Code)}
+		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
+		if err != nil && config.Config.Env != "test" {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   err.Error(),
+				"message": "Couldn't send OTP Code to mailbox",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
+	})
+
+	g.POST("/otp/resend", func(c *gin.Context) {
+		form := new(auth.OTPSendForm)
+		if err := c.ShouldBindJSON(form); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		u, err := models.GetUserByEmail(form.Email)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "User does not found",
+			})
+			return
+		}
+
+		ctx, _ := c.Get("ctx")
+
+		otp, err := models.GetOTPByUserID(u.ID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "Code doesn't exists try to create it first",
+			})
+			return
+		}
+
+		if time.Now().Before(otp.SentAt.Add(2 * time.Minute)) {
+			timeRemaining := otp.SentAt.Add(2 * time.Minute).Sub(time.Now()).Round(1 * time.Second)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Retry timeout",
+				"message": fmt.Sprintf("You should wait %s before sending another code", timeRemaining),
+			})
+			return
+		} else {
+			otp.UpdateSentAt(ctx.(context.Context))
 		}
 
 		//Sending Email

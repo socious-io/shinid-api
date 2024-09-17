@@ -23,20 +23,31 @@ type Verification struct {
 	UserID      uuid.UUID `db:"user_id" json:"user_id"`
 	User        *User     `db:"-" json:"user"`
 
-	PresentID     *string        `db:"present_id" json:"present_id"`
-	ConnectionID  *string        `db:"connection_id" json:"connection_id"`
-	ConnectionURL *string        `db:"connection_url" json:"connection_url"`
-	Body          types.JSONText `db:"body" json:"body"`
-
-	Status VerificationStatusType `db:"status" json:"status"`
+	PresentID     *string                 `db:"present_id" json:"present_id"`
+	ConnectionID  *string                 `db:"connection_id" json:"connection_id"`
+	ConnectionURL *string                 `db:"connection_url" json:"connection_url"`
+	Body          types.JSONText          `db:"body" json:"body"`
+	Attributes    []VerificationAttribute `db:"-" json:"attributes"`
+	Status        VerificationStatusType  `db:"status" json:"status"`
 
 	ConnectionAt *time.Time `db:"connection_at" json:"connection_at"`
 	VerifiedAt   *time.Time `db:"verified_at" json:"verified_at"`
 	UpdatedAt    time.Time  `db:"updated_at" json:"updated_at"`
 	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
 
-	UserJson   types.JSONText `db:"user" json:"-"`
-	SchemaJson types.JSONText `db:"schema" json:"-"`
+	AttributesJson types.JSONText `db:"attributes" json:"-"`
+	UserJson       types.JSONText `db:"user" json:"-"`
+	SchemaJson     types.JSONText `db:"schema" json:"-"`
+}
+
+type VerificationAttribute struct {
+	ID             uuid.UUID                `db:"id" json:"id"`
+	AttributeID    uuid.UUID                `db:"attribute_id" json:"attribute_id"`
+	SchemaID       uuid.UUID                `db:"schema_id" json:"schema_id"`
+	VerificationID uuid.UUID                `db:"verification_id" json:"verification_id"`
+	Value          string                   `db:"value" json:"value"`
+	Operator       VerificationOperatorType `db:"operator" json:"operator"`
+	CreatedAt      time.Time                `db:"created_at" json:"created_at"`
 }
 
 func (Verification) TableName() string {
@@ -48,37 +59,86 @@ func (Verification) FetchQuery() string {
 }
 
 func (v *Verification) Create(ctx context.Context) error {
-	rows, err := database.Query(
+	tx, err := database.GetDB().Beginx()
+	if err != nil {
+		return err
+	}
+	rows, err := database.TxQuery(
 		ctx,
+		tx,
 		"credentials/create_verification",
 		v.Name, v.Description, v.UserID, v.SchemaID,
 	)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.StructScan(v); err != nil {
+			tx.Rollback()
 			return err
 		}
 	}
+
+	for i := range v.Attributes {
+		v.Attributes[i].VerificationID = v.ID
+		v.Attributes[i].SchemaID = v.SchemaID
+	}
+	if _, err := database.TxExecuteQuery(tx, "credentials/create_verification_attributes", v.Attributes); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	return database.Fetch(v, v.ID)
 }
 
 func (v *Verification) Update(ctx context.Context) error {
-	rows, err := database.Query(
+	tx, err := database.GetDB().Beginx()
+	if err != nil {
+		return err
+	}
+	rows, err := database.TxQuery(
 		ctx,
+		tx,
 		"credentials/update_verification",
 		v.ID, v.Name, v.Description, v.UserID, v.SchemaID,
 	)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
-	defer rows.Close()
+
 	for rows.Next() {
 		if err := rows.StructScan(v); err != nil {
+			tx.Rollback()
 			return err
 		}
+	}
+	rows.Close()
+
+	rows, err = database.TxQuery(ctx, tx, "credentials/delete_verification_attributes", v.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	rows.Close()
+
+	for i := range v.Attributes {
+		v.Attributes[i].VerificationID = v.ID
+		v.Attributes[i].SchemaID = v.SchemaID
+	}
+
+	if _, err := database.TxExecuteQuery(tx, "credentials/create_verification_attributes", v.Attributes); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
 	}
 	return database.Fetch(v, v.ID)
 }

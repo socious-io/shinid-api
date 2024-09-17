@@ -76,3 +76,28 @@ func (c *CredentialStatusType) Scan(value interface{}) error {
 func (c CredentialStatusType) Value() (driver.Value, error) {
 	return string(c), nil
 }
+
+type VerificationOperatorType string
+
+const (
+	OperatorEqual   VerificationOperatorType = "EQUAL"
+	OperatorNot     VerificationOperatorType = "NOT"
+	OperatorBigger  VerificationOperatorType = "BIGGER"
+	OperatorSmaller VerificationOperatorType = "SMALLER"
+)
+
+func (o *VerificationOperatorType) Scan(value interface{}) error {
+	switch v := value.(type) {
+	case []byte:
+		*o = VerificationOperatorType(string(v))
+	case string:
+		*o = VerificationOperatorType(v)
+	default:
+		return fmt.Errorf("failed to scan operator type: %v", value)
+	}
+	return nil
+}
+
+func (o VerificationOperatorType) Value() (driver.Value, error) {
+	return string(o), nil
+}

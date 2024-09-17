@@ -44,6 +44,9 @@ type ConfigType struct {
 		Url   string `mapstructure:"url"`
 		Token string `mapstructure:"token"`
 	} `mapstructure:"nats"`
+	Logger struct {
+		Discord map[string]string `mapstructure:"discord"`
+	} `mapstructure:"logger"`
 }
 
 func Init(configPath string) {

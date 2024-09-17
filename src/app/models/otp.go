@@ -19,6 +19,7 @@ type OTP struct {
 	IsVerified bool      `db:"is_verified" json:"is_verified"`
 	ExpiresAt  time.Time `db:"expired_at" json:"expired_at"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
+	SentAt     time.Time `db:"sent_at" json:"sent_at"`
 }
 
 func (OTP) TableName() string {
@@ -57,6 +58,26 @@ func (o *OTP) Verify(ctx context.Context) error {
 		ctx,
 		"otp/verify",
 		o.UserID, o.Code,
+	)
+
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := o.Scan(rows); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (o *OTP) UpdateSentAt(ctx context.Context) error {
+	rows, err := database.Query(
+		ctx,
+		"otp/update_sentat",
+		o.ID,
 	)
 
 	if err != nil {

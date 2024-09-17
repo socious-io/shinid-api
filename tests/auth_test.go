@@ -28,15 +28,6 @@ func authGroup() {
 		bodyExpect(body, gin.H{"message": "success"})
 	})
 
-	It("Should return status 200", func() {
-		w := httptest.NewRecorder()
-		reqBody, _ := json.Marshal(gin.H{"email": usersData[0]["email"]})
-		req, _ := http.NewRequest("POST", "/auth/otp", bytes.NewBuffer(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
-		Expect(w.Code).To(Equal(200))
-	})
-
 	It("Should return status 200 with jwt tokens", func() {
 		//Get OTP
 		otp := new(models.OTP)

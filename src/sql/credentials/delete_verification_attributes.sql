@@ -1,0 +1,1 @@
+DELETE FROM verification_attribute_values WHERE verification_id=$1

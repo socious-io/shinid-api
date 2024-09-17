@@ -11,6 +11,7 @@ env:
   REGISTRY_USERNAME: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
   IMAGE_NAME: ${{ github.repository }}
+  WORKER_IMAGE_NAME: ${{ github.repository }}-worker
 
 jobs:
 
@@ -70,6 +71,21 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Extract Worker Docker metadata
+        id: meta-worker
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.WORKER_IMAGE_NAME }}
+
+      - name: Build and push Worker Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v6.7.0
+        with:
+          context: ./Worker.Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-worker.outputs.tags }}
+          labels: ${{ steps.meta-worker.outputs.labels }}
+
   deploy-dev:
     needs: [test-build-dev]
     name: Deploy to Dev
@@ -98,3 +114,15 @@ jobs:
           docker pull ${{ steps.meta.outputs.tags }}
           docker ps -qa --filter "name=shin-api" | grep -q . && docker stop shin-api && docker rm -fv shin-api
           docker run -d --restart always -p 5062:5062 -h shin-api --network shinapi_default --name shin-api ${{ steps.meta.outputs.tags }}
+
+      - name: Extract Docker metadata
+        id: meta-worker
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.WORKER_IMAGE_NAME }}
+
+      - name: Docker run
+        run: |
+          docker pull ${{ steps.meta-worker.outputs.tags }}
+          docker ps -qa --filter "name=shin-api-worker" | grep -q . && docker stop shin-api-worker && docker rm -fv shin-api-worker
+          docker run -d --restart always -p 5062:5062 -h shin-api-worker --network shinapi_default --name shin-api-worker ${{ steps.meta.outputs.tags }}

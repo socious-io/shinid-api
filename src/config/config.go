@@ -20,9 +20,10 @@ type ConfigType struct {
 		Migrations string `mapstructure:"migrations"`
 	} `mapstructure:"database"`
 	Sendgrid struct {
-		Disabled bool   `mapstructure:"disabled"`
-		URL      string `mapstructure:"url"`
-		ApiKey   string `mapstructure:"api_key"`
+		Disabled  bool              `mapstructure:"disabled"`
+		URL       string            `mapstructure:"url"`
+		ApiKey    string            `mapstructure:"api_key"`
+		Templates map[string]string `mapstructure:"templates"`
 	} `mapstructure:"sendgrid"`
 	Wellet struct {
 		Agent       string `mapstructure:"agent"`
@@ -39,6 +40,10 @@ type ConfigType struct {
 	Cors struct {
 		Origins []string `mapstructure:"origins"`
 	} `mapstructure:"cors"`
+	Nats struct {
+		Url   string `mapstructure:"url"`
+		Token string `mapstructure:"token"`
+	} `mapstructure:"nats"`
 	Logger struct {
 		Discord map[string]string `mapstructure:"discord"`
 	} `mapstructure:"logger"`

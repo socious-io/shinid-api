@@ -1,7 +1,6 @@
 package main
 
 import (
-	"shin/src/app"
 	"shin/src/config"
 	"shin/src/database"
 	"shin/src/lib"
@@ -10,6 +9,7 @@ import (
 )
 
 func main() {
+
 	config.Init("config.yml")
 	database.Connect(&database.ConnectOption{
 		URL:         config.Config.Database.URL,
@@ -19,15 +19,11 @@ func main() {
 		Timeout:     5 * time.Second,
 	})
 
-	services.Connect()
+	lib.InitSendGridLib(lib.SendGridType{
+		Disabled: config.Config.Sendgrid.Disabled,
+		ApiKey:   config.Config.Sendgrid.ApiKey,
+		Url:      config.Config.Sendgrid.URL,
+	}, config.Config.Sendgrid.Templates)
 
-	lib.InitS3Lib(lib.S3ConfigType{
-		AccessKeyId:     config.Config.S3.AccessKeyId,
-		SecretAccessKey: config.Config.S3.SecretAccessKey,
-		DefaultRegion:   config.Config.S3.DefaultRegion,
-		Bucket:          config.Config.S3.Bucket,
-		CDNUrl:          config.Config.S3.CDNUrl,
-	})
-
-	app.Serve()
+	services.Init()
 }

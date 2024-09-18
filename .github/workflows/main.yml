@@ -78,7 +78,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.WORKER_IMAGE_NAME }}
 
       - name: Build and push Worker Docker image
-        id: build-and-push
+        id: build-and-push-worker
         uses: docker/build-push-action@v6.7.0
         with:
           context: ./Worker.Dockerfile

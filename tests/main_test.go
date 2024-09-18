@@ -24,10 +24,11 @@ import (
 )
 
 var (
-	configPath string
-	router     *gin.Engine
-	db         *sqlx.DB
-	focused    = false
+	configPath   string
+	router       *gin.Engine
+	db           *sqlx.DB
+	focused      = false
+	authExecuted = false
 )
 
 // Setup the test environment before any tests run
@@ -52,6 +53,9 @@ var _ = Describe("Shin Test Suite", func() {
 	Context("Organizations", orgGroup)
 	Context("Schemas", schemaGroup)
 	Context("Verifications", verificationGroup)
+	Context("Shortner", shortnerGroup)
+	Context("Recipients", recipientGroup)
+	Context("Credentials", credentialGroup)
 })
 
 func init() {

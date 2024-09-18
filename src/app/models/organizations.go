@@ -15,9 +15,13 @@ type Organization struct {
 	Name        string     `db:"name" json:"name"`
 	Description string     `db:"description" json:"description"`
 	LogoID      *uuid.UUID `db:"logo_id" json:"logo_id"`
-	IsVerified  bool       `db:"is_verified" json:"is_verified"`
-	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
-	CreatedAt   time.Time  `db:"created_at" json:"created_at"`
+	Logo        struct {
+		Url      *string `db:"url" json:"url"`
+		Filename *string `db:"filename" json:"filename"`
+	} `db:"logo" json:"logo"`
+	IsVerified bool      `db:"is_verified" json:"is_verified"`
+	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
+	CreatedAt  time.Time `db:"created_at" json:"created_at"`
 }
 
 type OrganizationMember struct {
@@ -103,7 +107,7 @@ func (m *OrganizationMember) Scan(rows *sqlx.Rows) error {
 
 func GetOrg(id uuid.UUID) (*Organization, error) {
 	o := new(Organization)
-	if err := database.Fetch(o, id.String()); err != nil {
+	if err := database.Fetch(o, id); err != nil {
 		return nil, err
 	}
 	return o, nil
@@ -117,9 +121,9 @@ func GetOrgByMember(id, userID uuid.UUID) (*Organization, error) {
 	return o, nil
 }
 
-func GetOrgsByMember(ctx context.Context, userID uuid.UUID) ([]Organization, error) {
+func GetOrgsByMember(userID uuid.UUID) ([]Organization, error) {
 	var orgs []Organization
-	rows, err := database.Query(ctx, "organizations/fetch_by_member", userID)
+	rows, err := database.Queryx("organizations/fetch_by_member", userID)
 	if err != nil {
 		return nil, err
 	}

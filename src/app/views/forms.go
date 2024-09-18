@@ -27,13 +27,36 @@ type VerificationForm struct {
 	Name        string    `json:"name" validate:"required,min=3,max=32"`
 	Description *string   `json:"description" validate:"required,min=3"`
 	SchemaID    uuid.UUID `json:"schema_id" validate:"required"`
+	Attributes  []struct {
+		AttributeID uuid.UUID                       `json:"attribute_id"`
+		Operator    models.VerificationOperatorType `json:"operator"`
+		Value       string                          `json:"value"`
+	} `json:"attributes"`
+}
+
+type CredentialForm struct {
+	Name        string    `json:"name" validate:"required,min=3,max=32"`
+	Description *string   `json:"description" validate:"required,min=3"`
+	SchemaID    uuid.UUID `json:"schema_id" validate:"required"`
+	RecipientID uuid.UUID `json:"recipient_id" validate:"required"`
+	Claims      []struct {
+		Name  string      `json:"name" validate:"required,min=3,max=32"`
+		Value interface{} `json:"value" validate:"required"`
+	} `json:"claims" validate:"required"`
+}
+
+type RecipientForm struct {
+	FirstName string `json:"first_name" validate:"required,min=3,max=128"`
+	LastName  string `json:"last_name" validate:"required,min=3,max=128"`
+	Email     string `json:"email" validate:"required,email"`
 }
 
 type ProfileUpdateForm struct {
-	Username  string  `json:"username"`
-	JobTitle  *string `json:"job_title"`
-	Bio       *string `json:"bio"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Phone     *string `json:"phone"`
+	Username  *string    `json:"username" validate:"required,min=3,max=32"`
+	JobTitle  *string    `json:"job_title"`
+	Bio       *string    `json:"bio"`
+	FirstName string     `json:"first_name" validate:"required,min=3,max=32"`
+	LastName  string     `json:"last_name" validate:"required,min=3,max=32"`
+	Phone     *string    `json:"phone"`
+	AvatarID  *uuid.UUID `json:"avatar_id"`
 }

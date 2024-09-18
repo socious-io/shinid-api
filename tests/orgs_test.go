@@ -12,7 +12,7 @@ import (
 )
 
 func orgGroup() {
-	if focused {
+	if focused && !authExecuted {
 		authGroup()
 	}
 

@@ -2,12 +2,15 @@ package views
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"net/url"
 	"shin/src/app/auth"
 	"shin/src/app/models"
+	"shin/src/config"
 	"shin/src/database"
 	"shin/src/utils"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -21,7 +24,6 @@ func verificationsGroup(router *gin.Engine) {
 		page, _ := c.Get("paginate")
 		verifications, total, err := models.GetVerifications(u.(*models.User).ID, page.(database.Paginate))
 		if err != nil {
-			fmt.Println(err, "----------")
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -31,10 +33,67 @@ func verificationsGroup(router *gin.Engine) {
 		})
 	})
 
-	g.GET("/:id", func(c *gin.Context) {
+	g.GET("/:id", auth.LoginRequired(), func(c *gin.Context) {
 		id := c.Param("id")
 		v, err := models.GetVerification(uuid.MustParse(id))
 		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, v)
+	})
+
+	g.GET("/:id/connect", func(c *gin.Context) {
+		id := c.Param("id")
+		v, err := models.GetVerification(uuid.MustParse(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if v.ConnectionURL != nil {
+			if time.Since(*v.ConnectionAt) < 2*time.Minute {
+				c.JSON(http.StatusOK, v)
+				return
+			}
+		}
+		ctx, _ := c.Get("ctx")
+
+		callback, _ := url.JoinPath(config.Config.Host, strings.ReplaceAll(c.Request.URL.String(), "connect", "callback"))
+
+		if err := v.NewConnection(ctx.(context.Context), callback); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, v)
+	})
+
+	g.GET("/:id/callback", func(c *gin.Context) {
+		id := c.Param("id")
+		v, err := models.GetVerification(uuid.MustParse(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx, _ := c.Get("ctx")
+		if err := v.ProofRequest(ctx.(context.Context)); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "success",
+		})
+	})
+
+	g.GET("/:id/verify", func(c *gin.Context) {
+		id := c.Param("id")
+		v, err := models.GetVerification(uuid.MustParse(id))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx, _ := c.Get("ctx")
+		if err := v.ProofVerify(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

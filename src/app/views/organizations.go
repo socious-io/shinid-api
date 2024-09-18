@@ -17,9 +17,8 @@ func orgGroup(router *gin.Engine) {
 
 	g.GET("", func(c *gin.Context) {
 		u, _ := c.Get("user")
-		ctx, _ := c.Get("ctx")
 
-		orgs, err := models.GetOrgsByMember(ctx.(context.Context), u.(*models.User).ID)
+		orgs, err := models.GetOrgsByMember(u.(*models.User).ID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

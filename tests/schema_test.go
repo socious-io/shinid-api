@@ -7,12 +7,13 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func schemaGroup() {
-	if focused {
+	if focused && !authExecuted {
 		authGroup()
 	}
 	It("it should create schema", func() {
@@ -25,6 +26,10 @@ func schemaGroup() {
 			router.ServeHTTP(w, req)
 			body := decodeBody(w.Body)
 			schemasData[i]["id"] = body["id"]
+			attrs := body["attributes"].([]interface{})
+			for j, attr := range attrs {
+				schemasData[i]["attributes"].([]gin.H)[j]["id"] = attr.(map[string]interface{})["id"]
+			}
 			Expect(w.Code).To(Equal(201))
 		}
 	})

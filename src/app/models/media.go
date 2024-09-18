@@ -1,6 +1,8 @@
 package models
 
 import (
+	"context"
+	"shin/src/database"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,4 +27,30 @@ func (Media) FetchQuery() string {
 
 func (m *Media) Scan(rows *sqlx.Rows) error {
 	return rows.StructScan(m)
+}
+
+func (m *Media) Create(ctx context.Context) error {
+	rows, err := database.Query(
+		ctx,
+		"media/create",
+		m.UserID, m.URL, m.Filename,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := m.Scan(rows); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func GetMedia(id uuid.UUID) (*Media, error) {
+	m := new(Media)
+	if err := database.Fetch(m, id); err != nil {
+		return nil, err
+	}
+	return m, nil
 }

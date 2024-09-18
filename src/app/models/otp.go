@@ -2,6 +2,8 @@ package models
 
 import (
 	"context"
+	"log"
+	"math/rand/v2"
 	"shin/src/database"
 	"time"
 
@@ -17,6 +19,7 @@ type OTP struct {
 	IsVerified bool      `db:"is_verified" json:"is_verified"`
 	ExpiresAt  time.Time `db:"expired_at" json:"expired_at"`
 	CreatedAt  time.Time `db:"created_at" json:"created_at"`
+	SentAt     time.Time `db:"sent_at" json:"sent_at"`
 }
 
 func (OTP) TableName() string {
@@ -32,6 +35,7 @@ func (o *OTP) Scan(rows *sqlx.Rows) error {
 }
 
 func (o *OTP) Create(ctx context.Context) error {
+
 	rows, err := database.Query(
 		ctx,
 		"otp/create",
@@ -67,6 +71,39 @@ func (o *OTP) Verify(ctx context.Context) error {
 
 	}
 	return nil
+}
+
+func (o *OTP) UpdateSentAt(ctx context.Context) error {
+	rows, err := database.Query(
+		ctx,
+		"otp/update_sentat",
+		o.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := o.Scan(rows); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func NewOTP(ctx context.Context, userID uuid.UUID, perpose string) (*OTP, error) {
+	o := &OTP{
+		UserID:  userID,
+		Code:    int(100000 + rand.Float64()*900000),
+		Perpose: perpose,
+	}
+	if err := o.Create(ctx); err != nil {
+		return nil, err
+	}
+	log.Printf("OTP generated %d \n", o.Code)
+	return o, nil
 }
 
 func GetOTPByUserID(user_id uuid.UUID) (*OTP, error) {

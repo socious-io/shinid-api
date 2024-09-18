@@ -56,5 +56,6 @@ func GenerateFullTokens(id string) (map[string]any, error) {
 	return map[string]any{
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
+		"token_type":    "Bearer",
 	}, nil
 }

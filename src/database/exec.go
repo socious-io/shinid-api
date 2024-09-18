@@ -145,7 +145,6 @@ func TxExecuteQuery(tx *sqlx.Tx, queryName string, data interface{}) (sql.Result
 		if err != nil {
 			return nil, fmt.Errorf("could not load query: %v", err)
 		}
-
 		result, err = tx.NamedExec(query, data)
 		if err != nil {
 			return nil, err
@@ -286,9 +285,15 @@ func UnmarshalJSONTextFields(input interface{}) error {
 			for j := 0; j < v.NumField(); j++ {
 				targetField := v.Field(j)
 				targetFieldType := t.Field(j)
+
+				if fieldType.Name == targetFieldType.Name {
+					continue
+				}
+
 				if targetFieldType.Tag.Get("json") != dbTag {
 					continue
 				}
+
 				// Ensure that the target field is a struct pointer and not the JSONText itself
 				if targetField.Kind() == reflect.Ptr && targetFieldType.Type.Kind() == reflect.Ptr {
 					targetField.Set(reflect.New(targetFieldType.Type.Elem())) // Initialize the struct pointer
@@ -298,8 +303,7 @@ func UnmarshalJSONTextFields(input interface{}) error {
 					}
 					data = preprocessJSONDatetimes(data)
 					// Unmarshal into the corresponding field
-					err := json.Unmarshal(data, targetField.Interface())
-					if err != nil {
+					if err := json.Unmarshal(data, targetField.Interface()); err != nil {
 						log.Println("parse json foreign Key : ", err)
 						continue
 					}
@@ -316,8 +320,7 @@ func UnmarshalJSONTextFields(input interface{}) error {
 					}
 					data = preprocessJSONDatetimes(data)
 					// Unmarshal into the slice
-					err := json.Unmarshal(data, slicePtr)
-					if err != nil {
+					if err := json.Unmarshal(data, slicePtr); err != nil {
 						log.Println("parse Json array foreign Key : ", err)
 						continue
 					}

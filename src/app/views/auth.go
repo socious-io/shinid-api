@@ -2,14 +2,14 @@ package views
 
 import (
 	"context"
-	"math/rand/v2"
+	"fmt"
 	"net/http"
 	"shin/src/app/auth"
 	"shin/src/app/models"
-	"shin/src/app/services"
-	"shin/src/config"
+	"shin/src/services"
 	"shin/src/utils"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -50,10 +50,12 @@ func authGroup(router *gin.Engine) {
 		}
 		u := new(models.User)
 		utils.Copy(form, u)
-		password, _ := auth.HashPassword(form.Password)
-		u.Password = &password
+		if form.Password != nil {
+			password, _ := auth.HashPassword(*form.Password)
+			u.Password = &password
+		}
 
-		if u.Username == "" {
+		if form.Username == nil {
 			u.Username = auth.GenerateUsername(u.Email)
 		}
 
@@ -62,13 +64,28 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		tokens, err := auth.GenerateFullTokens(u.ID.String())
+
+		otp, err := models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
+
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "Couldn't save OTP",
+			})
 			return
 		}
 
-		c.JSON(http.StatusOK, tokens)
+		//Sending Email
+		items := map[string]string{"code": strconv.Itoa(otp.Code)}
+		services.SendEmail(services.EmailConfig{
+			Approach:    services.EmailApproachTemplate,
+			Destination: u.Email,
+			Title:       "OTP Code",
+			Template:    "otp",
+			Args:        items,
+		})
+
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
 	g.POST("/refresh", func(c *gin.Context) {
@@ -120,15 +137,20 @@ func authGroup(router *gin.Engine) {
 		}
 
 		ctx, _ := c.Get("ctx")
-		otp := models.OTP{
-			UserID:  u.ID,
-			Code:    int(100000 + rand.Float64()*900000),
-			Perpose: "AUTH",
-		}
 
-		if err := otp.Create(ctx.(context.Context)); err != nil {
+		otp, err := models.GetOTPByUserID(u.ID)
+		if err != nil {
+			otp, err = models.NewOTP(ctx.(context.Context), u.ID, "AUTH")
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{
+					"error":   err.Error(),
+					"message": "Couldn't save OTP",
+				})
+				return
+			}
+		} else {
 			c.JSON(http.StatusNotFound, gin.H{
-				"error":   err.Error(),
+				"error":   "Threre's still a valid OTP Code try to resend it",
 				"message": "Couldn't save OTP",
 			})
 			return
@@ -136,19 +158,69 @@ func authGroup(router *gin.Engine) {
 
 		//Sending Email
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
-		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
-		if err != nil && config.Config.Env != "test" {
-			c.JSON(http.StatusInternalServerError, gin.H{
+		services.SendEmail(services.EmailConfig{
+			Approach:    services.EmailApproachTemplate,
+			Destination: u.Email,
+			Title:       "OTP Code",
+			Template:    "otp",
+			Args:        items,
+		})
+
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
+	})
+
+	g.POST("/otp/resend", func(c *gin.Context) {
+		form := new(auth.OTPSendForm)
+		if err := c.ShouldBindJSON(form); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		u, err := models.GetUserByEmail(form.Email)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
 				"error":   err.Error(),
-				"message": "Couldn't send OTP Code to mailbox",
+				"message": "User does not found",
 			})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{})
+
+		ctx, _ := c.Get("ctx")
+
+		otp, err := models.GetOTPByUserID(u.ID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   err.Error(),
+				"message": "Code doesn't exists try to create it first",
+			})
+			return
+		}
+
+		if time.Now().Before(otp.SentAt.Add(2 * time.Minute)) {
+			timeRemaining := otp.SentAt.Add(2 * time.Minute).Sub(time.Now()).Round(1 * time.Second)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "Retry timeout",
+				"message": fmt.Sprintf("You should wait %s before sending another code", timeRemaining),
+			})
+			return
+		} else {
+			otp.UpdateSentAt(ctx.(context.Context))
+		}
+
+		//Sending Email
+		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
+		services.SendEmail(services.EmailConfig{
+			Approach:    services.EmailApproachTemplate,
+			Destination: u.Email,
+			Title:       "OTP Code",
+			Template:    "otp",
+			Args:        items,
+		})
+
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 
 	g.POST("/otp/verify", func(c *gin.Context) {
-
 		form := new(auth.OTPConfirmForm)
 		if err := c.ShouldBindJSON(form); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -175,8 +247,9 @@ func authGroup(router *gin.Engine) {
 				"message": "A problem occured when trying to verify the code",
 			})
 			return
-		} else if otp.IsVerified == false {
-			c.JSON(http.StatusNotFound, gin.H{
+		}
+		if !otp.IsVerified {
+			c.JSON(http.StatusBadRequest, gin.H{
 				"error":   nil,
 				"message": "Code does not found or it is wrong",
 			})
@@ -226,13 +299,8 @@ func authGroup(router *gin.Engine) {
 
 		//Creating OTP
 		ctx, _ := c.Get("ctx")
-		otp := models.OTP{
-			UserID:  u.ID,
-			Code:    int(100000 + rand.Float64()*900000),
-			Perpose: "FORGET_PASSWORD",
-		}
-
-		if err := otp.Create(ctx.(context.Context)); err != nil {
+		otp, err := models.NewOTP(ctx.(context.Context), u.ID, "FORGET_PASSWORD")
+		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error":   err.Error(),
 				"message": "Couldn't save OTP",
@@ -242,25 +310,25 @@ func authGroup(router *gin.Engine) {
 
 		//Sending Email
 		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
-		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["forget-password"], items)
-		if err != nil && config.Config.Env != "test" {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   err.Error(),
-				"message": "Couldn't send OTP Code to mailbox",
-			})
-			return
-		}
+		services.SendEmail(services.EmailConfig{
+			Approach:    services.EmailApproachTemplate,
+			Destination: u.Email,
+			Title:       "Forget Password OTP Code",
+			Template:    "forget-password",
+			Args:        items,
+		})
+
 		c.JSON(http.StatusOK, gin.H{})
 
 	})
 
-	g.POST("/password/update", auth.LoginRequired(), func(c *gin.Context) {
+	g.PUT("/password", auth.LoginRequired(), func(c *gin.Context) {
 
 		ctx, _ := c.Get("ctx")
 		u, _ := c.Get("user")
 		var password string
-
-		if u.(*models.User).PasswordExpired || *u.(*models.User).Password == "" {
+		user := u.(*models.User)
+		if user.PasswordExpired || user.Password == nil {
 
 			//Direct Password change
 			form := new(auth.DirectPasswordChangeForm)
@@ -283,7 +351,6 @@ func authGroup(router *gin.Engine) {
 				return
 			}
 			password = form.Password
-
 		}
 
 		newPassword, err := auth.HashPassword(password)
@@ -292,11 +359,13 @@ func authGroup(router *gin.Engine) {
 			return
 		}
 
-		*u.(*models.User).Password = newPassword
+		user.Password = &newPassword
 		if err := u.(*models.User).UpdatePassword(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		c.JSON(http.StatusAccepted, gin.H{"message": "success"})
 
 	})
 
@@ -307,17 +376,22 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		emailStatus := "UNKOWN"
+		usernameStatus := "UNKOWN"
 
-		u, err := models.GetUserByEmail(form.Email)
-		emailStatus := "AVAILABLE"
-		if err == nil && u.Status == "ACTIVE" {
-			emailStatus = "EXISTS"
+		if form.Email != nil {
+			u, err := models.GetUserByEmail(*form.Email)
+			emailStatus = "AVAILABLE"
+			if err == nil && u.Status == "ACTIVE" {
+				emailStatus = "EXISTS"
+			}
 		}
-
-		u, err = models.GetUserByUsername(form.Username)
-		usernameStatus := "AVAILABLE"
-		if err == nil {
-			usernameStatus = "EXISTS"
+		if form.Username != nil {
+			u, err := models.GetUserByUsername(*form.Username)
+			usernameStatus = "AVAILABLE"
+			if err == nil && u.Status == "ACTIVE" {
+				usernameStatus = "EXISTS"
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{

@@ -1,9 +1,10 @@
 UPDATE users
 SET 
-    first_name=$2,
-    last_name=$3,
-    bio=$4,
-    job_title=$5,
-    phone=$6,
-    username=$7
-WHERE id=$1 RETURNING id
+    first_name = COALESCE($2, first_name),
+    last_name = COALESCE($3, last_name),
+    bio = COALESCE($4, bio),
+    job_title = COALESCE($5, job_title),
+    phone = COALESCE($6, phone),
+    username = COALESCE($7, username)
+WHERE id = $1
+RETURNING *;

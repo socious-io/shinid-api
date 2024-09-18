@@ -208,15 +208,15 @@ func authGroup(router *gin.Engine) {
 		}
 
 		//Sending Email
-		items := map[string]string{"code": strconv.Itoa(otp.Code)}
-		err = services.SendGridClient.SendWithTemplate(u.Email, "OTP Code", services.SendGridTemplates["otp"], items)
-		if err != nil && config.Config.Env != "test" {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   err.Error(),
-				"message": "Couldn't send OTP Code to mailbox",
-			})
-			return
-		}
+		items := map[string]string{"name": *u.FirstName, "code": strconv.Itoa(otp.Code)}
+		services.SendEmail(services.EmailConfig{
+			Approach:    services.EmailApproachTemplate,
+			Destination: u.Email,
+			Title:       "OTP Code",
+			Template:    "otp",
+			Args:        items,
+		})
+
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	})
 

@@ -82,7 +82,7 @@ jobs:
         uses: docker/build-push-action@v6.7.0
         with:
           context: .
-          file: "{context}/Worker.Dockerfile"
+          file: "{{context}}/Worker.Dockerfile"
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-worker.outputs.tags }}
           labels: ${{ steps.meta-worker.outputs.labels }}

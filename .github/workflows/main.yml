@@ -122,8 +122,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.WORKER_IMAGE_NAME }}
 
-      - name: Docker run
+      - name: Docker run worker
         run: |
           docker pull ${{ steps.meta-worker.outputs.tags }}
           docker ps -qa --filter "name=shin-api-worker" | grep -q . && docker stop shin-api-worker && docker rm -fv shin-api-worker
-          docker run -d --restart always -p 5062:5062 -h shin-api-worker --network shinapi_default --name shin-api-worker ${{ steps.meta.outputs.tags }}
+          docker run -d --restart always -h shin-api-worker --network shinapi_default --name shin-api-worker ${{ steps.meta.outputs.tags }}

@@ -6,7 +6,7 @@ import (
 	"shin/src/utils"
 )
 
-const EmailChannel = "email"
+var EmailChannel = CategorizeChannel("email")
 
 type EmailApproachType string
 
@@ -30,6 +30,8 @@ func SendEmail(emailConfig EmailConfig) {
 func EmailWorker(message interface{}) {
 	emailConfig := new(EmailConfig)
 	utils.Copy(message, emailConfig)
+
+	fmt.Println("receiving message", message)
 
 	var (
 		destination = emailConfig.Destination

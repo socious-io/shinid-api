@@ -88,9 +88,9 @@ func Init() {
 }
 
 // Register Services
-func categorizeChannel(channel string) string {
+func CategorizeChannel(channel string) string {
 	return fmt.Sprintf("%s/%s", ChannelDir, channel)
 }
 func registerConsumers(Mq MessageQueue) {
-	Mq.subscribe(categorizeChannel(EmailChannel), EmailWorker)
+	Mq.subscribe(EmailChannel, EmailWorker)
 }

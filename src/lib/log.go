@@ -163,5 +163,9 @@ func (hook *LogrusDiscordHook) Fire(entry *logrus.Entry) error {
 }
 
 func (hook *LogrusDiscordHook) Levels() []logrus.Level {
-	return logrus.AllLevels
+	return []logrus.Level{
+		logrus.PanicLevel,
+		logrus.FatalLevel,
+		logrus.ErrorLevel,
+	}
 }

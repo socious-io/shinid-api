@@ -149,6 +149,25 @@ func ProofVerify(presentID string) (H, error) {
 	return vc, nil
 }
 
+func SendCredential(connectionID, did string, claims interface{}) (H, error) {
+	payload := H{
+		"claims":            claims,
+		"connectionId":      connectionID,
+		"issuingDID":        did,
+		"schemaId":          nil,
+		"automaticIssuance": true,
+	}
+	res, err := makeRequest("/cloud-agent/issue-credentials/credential-offers", payload)
+	if err != nil {
+		return nil, err
+	}
+	var body H
+	if err := json.Unmarshal(res, &body); err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
 func makeRequest(path string, body H) ([]byte, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("%s%s", config.Config.Wellet.Agent, path)

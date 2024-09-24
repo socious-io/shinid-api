@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"shin/src/database"
+	"shin/src/wallet"
 	"time"
 
 	"github.com/google/uuid"
@@ -76,10 +77,27 @@ func (o *Organization) Create(ctx context.Context, userID uuid.UUID) error {
 	return tx.Commit()
 }
 
+func (o *Organization) NewDID(ctx context.Context) error {
+	did, err := wallet.CreateDID()
+	if err != nil {
+		return err
+	}
+	rows, err := database.Query(
+		ctx, "organizations/update_did",
+		o.ID, did,
+	)
+	if err != nil {
+		return err
+	}
+	o.DID = &did
+	defer rows.Close()
+	return nil
+}
+
 func (o *Organization) Update(ctx context.Context) error {
 	rows, err := database.Query(
 		ctx, "organizations/update",
-		o.ID, o.Name, o.Description, o.LogoID, o.DID,
+		o.ID, o.Name, o.Description, o.LogoID,
 	)
 	if err != nil {
 		return err

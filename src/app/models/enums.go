@@ -56,7 +56,7 @@ func (c VerificationStatusType) Value() (driver.Value, error) {
 type CredentialStatusType string
 
 const (
-	StatusIssued   CredentialStatusType = "REQUESTED"
+	StatusIssued   CredentialStatusType = "ISSUED"
 	StatusClaimed  CredentialStatusType = "CLAIMED"
 	StatusCanceled CredentialStatusType = "CANCELED"
 )

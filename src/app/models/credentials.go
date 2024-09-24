@@ -121,11 +121,13 @@ func (c *Credential) Issue(ctx context.Context) error {
 	if time.Since(*c.ConnectionAt) > time.Hour {
 		return errors.New("connection expired")
 	}
-	// TODO: ISSUE CREDENTIAL
-	/* presentID, err := wallet.ProofRequest(*c.ConnectionID)
-	if err != nil {
+
+	if err := c.Organization.NewDID(ctx); err != nil {
 		return err
-	} */
+	}
+	if _, err := wallet.SendCredential(*c.ConnectionID, *c.Organization.DID, c.Claims); err != nil {
+		return err
+	}
 	rows, err := database.Query(
 		ctx,
 		"credentials/update_issuing",

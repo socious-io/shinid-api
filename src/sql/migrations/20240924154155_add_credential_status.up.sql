@@ -1,0 +1,1 @@
+ALTER TYPE credential_status_type ADD VALUE 'CREATED';

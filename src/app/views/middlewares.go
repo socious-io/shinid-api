@@ -3,6 +3,8 @@ package views
 import (
 	"bytes"
 	"io"
+	"net/http"
+	"shin/src/config"
 	"shin/src/database"
 	"shin/src/lib"
 	"strconv"
@@ -83,5 +85,23 @@ func GinLoggerMiddleware(logger *lib.GinLogger) gin.HandlerFunc {
 			Path:           c.Request.URL.Path,
 			Query:          c.Request.URL.RawQuery,
 		})
+	}
+}
+
+// Administration
+func adminAccessRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		access_token := c.Query("admin_access_token")
+		isAdmin := access_token == config.Config.Admin.AccessToken
+
+		if !isAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "AdminAccessRequired"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+		return
 	}
 }

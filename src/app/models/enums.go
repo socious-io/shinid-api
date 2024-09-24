@@ -101,3 +101,27 @@ func (o *VerificationOperatorType) Scan(value interface{}) error {
 func (o VerificationOperatorType) Value() (driver.Value, error) {
 	return string(o), nil
 }
+
+type KybVerificationStatusType string
+
+const (
+	KYBStatusPending  KybVerificationStatusType = "PENDING"
+	KYBStatusApproved KybVerificationStatusType = "APPROVED"
+	KYBStatusRejected KybVerificationStatusType = "REJECTED"
+)
+
+func (o *KybVerificationStatusType) Scan(value interface{}) error {
+	switch v := value.(type) {
+	case []byte:
+		*o = KybVerificationStatusType(string(v))
+	case string:
+		*o = KybVerificationStatusType(v)
+	default:
+		return fmt.Errorf("failed to scan operator type: %v", value)
+	}
+	return nil
+}
+
+func (o KybVerificationStatusType) Value() (driver.Value, error) {
+	return string(o), nil
+}

@@ -47,6 +47,9 @@ type ConfigType struct {
 	Logger struct {
 		Discord map[string]string `mapstructure:"discord"`
 	} `mapstructure:"logger"`
+	Admin struct {
+		AccessToken string `mapstructure:"access_token"`
+	} `mapstructure:"admin"`
 }
 
 func Init(configPath string) {

@@ -14,6 +14,32 @@ import (
 	"github.com/google/uuid"
 )
 
+func createDiscordReviewMessage(kyb *models.KYBVerification, u *models.User, org *models.Organization) string {
+
+	documents := ""
+	for i, document := range kyb.Documents {
+		documents = fmt.Sprintf("%s\n%v. %s", documents, i, document.Url)
+	}
+
+	message := fmt.Sprintf("ID: %s\n", kyb.ID)
+	message += "\nUser--------------------------------\n"
+	message += fmt.Sprintf("ID: %s\n", u.ID)
+	message += fmt.Sprintf("Firstname: %s\n", *u.FirstName)
+	message += fmt.Sprintf("Lastname: %s\n", *u.LastName)
+	message += fmt.Sprintf("Email: %s\n", u.Email)
+	message += "\nOrganization------------------------\n"
+	message += fmt.Sprintf("ID: %s\n", org.ID)
+	message += fmt.Sprintf("Name: %s\n", org.Name)
+	message += fmt.Sprintf("Description: %s\n", org.Description)
+	message += fmt.Sprintf("\nDocuments---------------------------%s\n\n", documents)
+	message += fmt.Sprintf("\nReviewing----------------------------\n")
+	message += fmt.Sprintf("Approve: https://api.shinid.com/kyb/%s/approve?admin_access_token=%s\n", kyb.ID, config.Config.Admin.AccessToken)
+	message += fmt.Sprintf("Reject: https://api.shinid.com/kyb/%s/reject?admin_access_token=%s\n", kyb.ID, config.Config.Admin.AccessToken)
+
+	return message
+
+}
+
 func kybVerificationGroup(router *gin.Engine) {
 	g := router.Group("kyb")
 	g.Use(auth.LoginRequired())
@@ -73,19 +99,9 @@ func kybVerificationGroup(router *gin.Engine) {
 		// 	},
 		// )
 
-		documents := ""
-		message := fmt.Sprintf("ID: %s\n", kyb.ID)
-
-		for i, document := range kyb.Documents {
-			documents = fmt.Sprintf("%s\n%v. %s/%s", documents, i, config.Config.S3.CDNUrl, document.Url)
-		}
-		message += fmt.Sprintf("Documents:%s\n\n", documents)
-		message += fmt.Sprintf("Approve: https://api.shinid.com/kyb/%s/approve\n", kyb.ID)
-		message += fmt.Sprintf("Reject: https://api.shinid.com/kyb/%s/reject\n", kyb.ID)
-
 		lib.DiscordSendTextMessage(
 			config.Config.Logger.Discord["shin_kyb_channel"],
-			message,
+			createDiscordReviewMessage(kyb, u.(*models.User), org),
 		)
 
 		c.JSON(http.StatusOK, kyb)

@@ -109,8 +109,6 @@ func GetAllByUserId(userId uuid.UUID, p database.Paginate) ([]KYBVerification, i
 		ids = append(ids, f.ID)
 	}
 
-	println("called", ids)
-
 	if err := database.Fetch(&kybVerifications, ids...); err != nil {
 		return nil, 0, err
 	}

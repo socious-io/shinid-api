@@ -31,8 +31,6 @@ func EmailWorker(message interface{}) {
 	emailConfig := new(EmailConfig)
 	utils.Copy(message, emailConfig)
 
-	fmt.Println("receiving message", message)
-
 	var (
 		destination = emailConfig.Destination
 		title       = emailConfig.Title

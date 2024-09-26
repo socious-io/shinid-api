@@ -2,7 +2,6 @@ package lib
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -48,7 +47,6 @@ func (sgc *SendGridType) SendWithTemplate(address string, name string, templateI
 
 	response, err := sendgrid.API(request)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	} else if strings.Split(strconv.Itoa(response.StatusCode), "")[0] != "2" {
 		return errors.New(response.Body)

@@ -75,30 +75,6 @@ func kybVerificationGroup(router *gin.Engine) {
 			return
 		}
 
-		// lib.DiscordSendWithComponents(
-		// 	config.Config.Logger.Discord["shin_kyb_channel"],
-		// 	fmt.Sprintf(`
-		// 		ID: %s
-		// 	`, kyb.ID),
-		// 	lib.DiscordComponent{
-		// 		Type: 1,
-		// 		Components: []lib.DiscordButton{
-		// 			{
-		// 				Type:  lib.DiscordButtonSimple,
-		// 				Label: "Approve",
-		// 				Style: lib.DiscordStyleSuccess,
-		// 				URL:   "URL to Approve",
-		// 			},
-		// 			{
-		// 				Type:  lib.DiscordButtonSimple,
-		// 				Label: "Reject",
-		// 				Style: lib.DiscordStyleDanger,
-		// 				URL:   "URL to Reject",
-		// 			},
-		// 		},
-		// 	},
-		// )
-
 		lib.DiscordSendTextMessage(
 			config.Config.Logger.Discord["shin_kyb_channel"],
 			createDiscordReviewMessage(kyb, u.(*models.User), org),

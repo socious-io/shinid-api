@@ -106,7 +106,7 @@ func kybVerificationGroup(router *gin.Engine) {
 		u, _ := c.Get("user")
 		verificationId := c.Param("id")
 
-		verification, err := models.GetById(uuid.MustParse(verificationId), u.(*models.User).ID)
+		verification, err := models.GetByIdAndUserId(uuid.MustParse(verificationId), u.(*models.User).ID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -120,11 +120,20 @@ func kybVerificationGroup(router *gin.Engine) {
 		ctx, _ := c.Get("ctx")
 		verificationId := c.Param("id")
 
-		kybVerification := models.KYBVerification{
-			ID: uuid.MustParse(verificationId),
+		verification, err := models.GetById(uuid.MustParse(verificationId))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 
-		if err := kybVerification.ChangeStatus(ctx.(context.Context), models.KYBStatusApproved); err != nil {
+		if err := verification.ChangeStatus(ctx.(context.Context), models.KYBStatusApproved); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		org, err := models.GetOrg(verification.OrgID)
+
+		if err := org.UpdateVerification(ctx.(context.Context), true); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

@@ -73,7 +73,7 @@ func (k *KYBVerification) Create(ctx context.Context, documents []string) (*KYBV
 	}
 	tx.Commit()
 
-	return GetById(k.ID, k.UserID)
+	return GetById(k.ID)
 }
 
 func (k *KYBVerification) ChangeStatus(ctx context.Context, status KybVerificationStatusType) error {
@@ -81,9 +81,17 @@ func (k *KYBVerification) ChangeStatus(ctx context.Context, status KybVerificati
 	return err
 }
 
-func GetById(id, userID uuid.UUID) (*KYBVerification, error) {
+func GetById(id uuid.UUID) (*KYBVerification, error) {
 	k := new(KYBVerification)
-	if err := database.Get(k, "kyb/fetch_by_id", id, userID); err != nil {
+	if err := database.Get(k, "kyb/fetch_by_id", id); err != nil {
+		return nil, err
+	}
+	return k, nil
+}
+
+func GetByIdAndUserId(id, userID uuid.UUID) (*KYBVerification, error) {
+	k := new(KYBVerification)
+	if err := database.Get(k, "kyb/fetch_by_id_and_user", id, userID); err != nil {
 		return nil, err
 	}
 	return k, nil

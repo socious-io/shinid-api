@@ -11,4 +11,4 @@ SELECT k.*,
 ) AS documents
 FROM kyb_verifications k
 LEFT JOIN kyb_verification_documents kd ON kd.verification_id=k.id
-WHERE k.id=$1
+WHERE k.id=$1 AND k.user_id=$2

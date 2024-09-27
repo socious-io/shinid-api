@@ -20,9 +20,10 @@ type Organization struct {
 		Url      *string `db:"url" json:"url"`
 		Filename *string `db:"filename" json:"filename"`
 	} `db:"logo" json:"logo"`
-	IsVerified bool      `db:"is_verified" json:"is_verified"`
-	UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
-	CreatedAt  time.Time `db:"created_at" json:"created_at"`
+	IsVerified         bool                       `db:"is_verified" json:"is_verified"`
+	VerificationStatus *KybVerificationStatusType `db:"verification_status" json:"verification_status"`
+	UpdatedAt          time.Time                  `db:"updated_at" json:"updated_at"`
+	CreatedAt          time.Time                  `db:"created_at" json:"created_at"`
 }
 
 type OrganizationMember struct {
@@ -98,6 +99,23 @@ func (o *Organization) Update(ctx context.Context) error {
 	rows, err := database.Query(
 		ctx, "organizations/update",
 		o.ID, o.Name, o.Description, o.LogoID,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		if err := o.Scan(rows); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (o *Organization) UpdateVerification(ctx context.Context, isVerified bool) error {
+	rows, err := database.Query(
+		ctx, "organizations/update_verification",
+		o.ID, isVerified,
 	)
 	if err != nil {
 		return err

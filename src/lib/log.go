@@ -2,7 +2,6 @@ package lib
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -142,22 +141,7 @@ func (hook *LogrusDiscordHook) Fire(entry *logrus.Entry) error {
 		return err
 	}
 
-	payload, err := json.Marshal(map[string]string{
-		"content": logMessage,
-	})
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Post(hook.WebhookURL, "application/json", bytes.NewBuffer(payload))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("Failed to send log to Discord, status: %s", resp.Status)
-	}
+	DiscordSendTextMessage(hook.WebhookURL, logMessage)
 
 	return nil
 }

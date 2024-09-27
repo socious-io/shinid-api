@@ -212,7 +212,6 @@ func authGroup(router *gin.Engine) {
 		}
 
 		//Sending Email
-		fmt.Println(otp)
 		items := map[string]string{"code": strconv.Itoa(otp.Code)}
 		if u.FirstName != nil {
 			items["name"] = *u.FirstName

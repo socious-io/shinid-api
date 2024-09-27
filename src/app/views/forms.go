@@ -60,3 +60,7 @@ type ProfileUpdateForm struct {
 	Phone     *string    `json:"phone"`
 	AvatarID  *uuid.UUID `json:"avatar_id"`
 }
+
+type KYBVerificationForm struct {
+	Documents []string `json:"documents"`
+}

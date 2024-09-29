@@ -45,7 +45,7 @@ func CreateDID() (string, error) {
 		return "", err
 	}
 
-	var didResponse H
+	var didResponse map[string]interface{}
 	err = json.Unmarshal(didRes, &didResponse)
 	if err != nil {
 		return "", err
@@ -65,7 +65,7 @@ func CreateDID() (string, error) {
 		return "", err
 	}
 
-	didRef := publishResponse["scheduledOperation"].(H)["didRef"].(string)
+	didRef := publishResponse["scheduledOperation"].(map[string]interface{})["didRef"].(string)
 	return didRef, nil
 }
 
@@ -161,7 +161,7 @@ func SendCredential(connectionID, did string, claims interface{}) (H, error) {
 	if err != nil {
 		return nil, err
 	}
-	var body H
+	var body map[string]interface{}
 	if err := json.Unmarshal(res, &body); err != nil {
 		return nil, err
 	}

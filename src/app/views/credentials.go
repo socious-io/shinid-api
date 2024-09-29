@@ -2,6 +2,7 @@ package views
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -92,8 +93,12 @@ func credentialsGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		schema, err := models.GetSchema(form.SchemaID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		cv := new(models.Credential)
-		utils.Copy(form, cv)
 		u, _ := c.Get("user")
 		cv.CreatedID = u.(*models.User).ID
 		ctx, _ := c.Get("ctx")
@@ -102,7 +107,16 @@ func credentialsGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("fetching org error :%v", err)})
 			return
 		}
+		utils.Copy(form, cv)
 		cv.OrganizationID = orgs[0].ID
+		claims := gin.H{}
+		for _, claim := range form.Claims {
+			claims[claim.Name] = claim.Value
+		}
+		claims["type"] = schema.Name
+		claims["issued_date"] = time.Now().Format(time.RFC3339)
+		claims["company_name"] = orgs[0].Name
+		cv.Claims, _ = json.Marshal(&claims)
 		if err := cv.Create(ctx.(context.Context)); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

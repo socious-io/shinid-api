@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"log"
 	"shin/src/database"
 	"shin/src/wallet"
 	"time"
@@ -79,6 +80,9 @@ func (o *Organization) Create(ctx context.Context, userID uuid.UUID) error {
 }
 
 func (o *Organization) NewDID(ctx context.Context) error {
+	if o.DID != nil {
+		return nil
+	}
 	did, err := wallet.CreateDID()
 	if err != nil {
 		return err
@@ -91,6 +95,7 @@ func (o *Organization) NewDID(ctx context.Context) error {
 		return err
 	}
 	o.DID = &did
+	log.Printf("New DID created for `%s` : %s\n", o.Name, *o.DID)
 	defer rows.Close()
 	return nil
 }

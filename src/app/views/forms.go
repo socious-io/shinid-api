@@ -34,15 +34,17 @@ type VerificationForm struct {
 	} `json:"attributes"`
 }
 
+type Claim struct {
+	Name  string      `json:"name" validate:"required,min=3,max=32"`
+	Value interface{} `json:"value" validate:"required"`
+}
+
 type CredentialForm struct {
 	Name        string    `json:"name" validate:"required,min=3,max=32"`
 	Description *string   `json:"description" validate:"required,min=3"`
 	SchemaID    uuid.UUID `json:"schema_id" validate:"required"`
 	RecipientID uuid.UUID `json:"recipient_id" validate:"required"`
-	Claims      []struct {
-		Name  string      `json:"name" validate:"required,min=3,max=32"`
-		Value interface{} `json:"value" validate:"required"`
-	} `json:"claims" validate:"required"`
+	Claims      []Claim   `json:"claims" validate:"required"`
 }
 
 type RecipientForm struct {

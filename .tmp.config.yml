@@ -20,9 +20,16 @@ s3:
 cors:
   origins:
     - '*'
+wallet:
+  agent: "AGENT_URL"
+  agent_api_key: "AGENT_API_KEY"
+  connect: "CONNECT_TO_WALLET_URL"
 nats:
   url: nats://127.0.0.1:4222
   secret: secret
 logger:
   discord:
-    shin_channel: "URL"
+    shin_channel: "SHIN_CHANNEL_URL"
+    shin_kyb_channel: "KYB_CHANNEL"
+admin:
+  access_token: "admin_access_token"

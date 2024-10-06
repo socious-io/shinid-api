@@ -45,7 +45,7 @@ func CreateDID() (string, error) {
 		return "", err
 	}
 
-	var didResponse H
+	var didResponse map[string]interface{}
 	err = json.Unmarshal(didRes, &didResponse)
 	if err != nil {
 		return "", err
@@ -65,7 +65,7 @@ func CreateDID() (string, error) {
 		return "", err
 	}
 
-	didRef := publishResponse["scheduledOperation"].(H)["didRef"].(string)
+	didRef := publishResponse["scheduledOperation"].(map[string]interface{})["didRef"].(string)
 	return didRef, nil
 }
 
@@ -96,12 +96,16 @@ func CreateConnection(callback string) (*Connect, error) {
 	return c, nil
 }
 
-func ProofRequest(connectionID string) (string, error) {
+func ProofRequest(connectionID string, challenge []byte) (string, error) {
 	res, err := makeRequest("/cloud-agent/present-proof/presentations", H{
 		"connectionId": connectionID,
 		"proofs":       []H{},
+		"claims": H{
+			"type": "verification",
+			"test": "test vc",
+		},
 		"options": H{
-			"challenge": "A challenge for the holder to sign",
+			"challenge": challenge,
 			"domain":    "shinid.com",
 		},
 	})
@@ -118,7 +122,8 @@ func ProofRequest(connectionID string) (string, error) {
 }
 
 func ProofVerify(presentID string) (H, error) {
-	res, err := getRequest(fmt.Sprintf("cloud-agent/present-proof/presentations/%s", presentID))
+	path := fmt.Sprintf("/cloud-agent/present-proof/presentations/%s", presentID)
+	res, err := getRequest(path)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +134,7 @@ func ProofVerify(presentID string) (H, error) {
 	if body["status"].(string) != "PresentationVerified" {
 		return nil, fmt.Errorf("presentation not verified")
 	}
-	_, payload, err := utils.DecodeJWT(body["data"].([]string)[0])
+	_, payload, err := utils.DecodeJWT(body["data"].([]interface{})[0].(string))
 	if err != nil {
 		return nil, fmt.Errorf("presentation could not decode data")
 	}
@@ -138,7 +143,7 @@ func ProofVerify(presentID string) (H, error) {
 		return nil, err
 	}
 
-	_, payload, err = utils.DecodeJWT(data["vp"].(H)["verifiableCredential"].([]string)[0])
+	_, payload, err = utils.DecodeJWT(data["vp"].(map[string]interface{})["verifiableCredential"].([]interface{})[0].(string))
 	if err != nil {
 		return nil, fmt.Errorf("presentation could not decode vc")
 	}
@@ -147,6 +152,25 @@ func ProofVerify(presentID string) (H, error) {
 		return nil, err
 	}
 	return vc, nil
+}
+
+func SendCredential(connectionID, did string, claims interface{}) (H, error) {
+	payload := H{
+		"claims":            claims,
+		"connectionId":      connectionID,
+		"issuingDID":        did,
+		"schemaId":          nil,
+		"automaticIssuance": true,
+	}
+	res, err := makeRequest("/cloud-agent/issue-credentials/credential-offers", payload)
+	if err != nil {
+		return nil, err
+	}
+	var body map[string]interface{}
+	if err := json.Unmarshal(res, &body); err != nil {
+		return nil, err
+	}
+	return body, nil
 }
 
 func makeRequest(path string, body H) ([]byte, error) {

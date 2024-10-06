@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"shin/src/config"
 	"shin/src/database"
@@ -168,7 +169,12 @@ func (v *Verification) ProofRequest(ctx context.Context) error {
 	if time.Since(*v.ConnectionAt) > time.Hour {
 		return errors.New("connection expired")
 	}
-	presentID, err := wallet.ProofRequest(*v.ConnectionID)
+
+	challenge, _ := json.Marshal(wallet.H{
+		"type": v.Schema.Name,
+	})
+
+	presentID, err := wallet.ProofRequest(*v.ConnectionID, challenge)
 	if err != nil {
 		return err
 	}
@@ -193,11 +199,14 @@ func (v *Verification) ProofVerify(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// TODO: Campare vc with schema and condition
 	vcData, _ := json.Marshal(vc)
+	query := "credentials/update_present_verify_verification"
+	if err := validateVC(*v.Schema, vc, v.Attributes); err != nil {
+		query = "credentials/update_present_failed_verification"
+	}
 	rows, err := database.Query(
 		ctx,
-		"credentials/update_present_verify_verification",
+		query,
 		v.ID, vcData,
 	)
 	if err != nil {
@@ -257,4 +266,36 @@ func GetVerifications(userId uuid.UUID, p database.Paginate) ([]Verification, in
 		return nil, 0, err
 	}
 	return verifications, fetchList[0].TotalCount, nil
+}
+
+func validateVC(schema Schema, vc wallet.H, attrs []VerificationAttribute) error {
+	for _, attr := range attrs {
+		attrName := ""
+		for _, a := range schema.Attributes {
+			if a.ID == attr.AttributeID {
+				attrName = a.Name
+				break
+			}
+		}
+		value, ok := vc[attrName]
+		if !ok {
+			return fmt.Errorf("could not find expecting attribute %s", attrName)
+		}
+
+		validationErr := fmt.Errorf("validation error on %s", attrName)
+
+		switch attr.Operator {
+		case OperatorEqual:
+			if fmt.Sprintf("%s", value) != attr.Value {
+				return validationErr
+			}
+		case OperatorBigger:
+		case OperatorSmaller:
+		case OperatorNot:
+			if fmt.Sprintf("%s", value) == attr.Value {
+				return validationErr
+			}
+		}
+	}
+	return nil
 }

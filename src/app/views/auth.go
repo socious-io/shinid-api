@@ -28,6 +28,10 @@ func authGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "email/password not match"})
 			return
 		}
+		if u.Password == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "email/password not match"})
+			return
+		}
 		if err := auth.CheckPasswordHash(form.Password, *u.Password); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "email/password not match"})
 			return

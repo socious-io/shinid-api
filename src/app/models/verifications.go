@@ -9,6 +9,7 @@ import (
 	"shin/src/config"
 	"shin/src/database"
 	"shin/src/wallet"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -286,11 +287,25 @@ func validateVC(schema Schema, vc wallet.H, attrs []VerificationAttribute) error
 
 		switch attr.Operator {
 		case OperatorEqual:
-			if fmt.Sprintf("%s", value) != attr.Value {
+			if fmt.Sprintf("%v", value) != attr.Value {
 				return validationErr
 			}
 		case OperatorBigger:
+			val, attrVal, err := convertValsToNumber(value, attr.Value)
+			if err != nil {
+				return err
+			}
+			if val < attrVal {
+				return validationErr
+			}
 		case OperatorSmaller:
+			val, attrVal, err := convertValsToNumber(value, attr.Value)
+			if err != nil {
+				return err
+			}
+			if val > attrVal {
+				return validationErr
+			}
 		case OperatorNot:
 			if fmt.Sprintf("%s", value) == attr.Value {
 				return validationErr
@@ -298,4 +313,22 @@ func validateVC(schema Schema, vc wallet.H, attrs []VerificationAttribute) error
 		}
 	}
 	return nil
+}
+
+func convertValsToNumber(value interface{}, attrVal string) (int, int, error) {
+	var val int
+	switch v := value.(type) {
+	case string:
+		if intVal, err := strconv.Atoi(v); err == nil {
+			val = intVal
+		}
+	case int:
+		val = v
+
+	}
+	attrIntVal, err := strconv.Atoi(attrVal)
+	if err != nil {
+		return 0, 0, fmt.Errorf("could not operate bigger/smaller on not number values")
+	}
+	return val, attrIntVal, nil
 }

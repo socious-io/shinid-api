@@ -98,6 +98,10 @@ func credentialsGroup(router *gin.Engine) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		if schema.IssueDisabled {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "schema for issuing credentials is disabled"})
+			return
+		}
 		cv := new(models.Credential)
 		u, _ := c.Get("user")
 		cv.CreatedID = u.(*models.User).ID

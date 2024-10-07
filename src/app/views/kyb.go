@@ -42,9 +42,8 @@ func createDiscordReviewMessage(kyb *models.KYBVerification, u *models.User, org
 
 func kybVerificationGroup(router *gin.Engine) {
 	g := router.Group("kyb")
-	g.Use(auth.LoginRequired())
 
-	g.POST("/:org_id", func(c *gin.Context) {
+	g.POST("/:org_id", auth.LoginRequired(), func(c *gin.Context) {
 		orgID := c.Param("org_id")
 		u, _ := c.Get("user")
 		ctx, _ := c.Get("ctx")
@@ -83,7 +82,7 @@ func kybVerificationGroup(router *gin.Engine) {
 		c.JSON(http.StatusOK, kyb)
 	})
 
-	g.GET("/", paginate(), func(c *gin.Context) {
+	g.GET("/", auth.LoginRequired(), paginate(), func(c *gin.Context) {
 		u, _ := c.Get("user")
 		paginate, _ := c.Get("paginate")
 		limit, _ := c.Get("limit")
@@ -102,7 +101,7 @@ func kybVerificationGroup(router *gin.Engine) {
 		})
 	})
 
-	g.GET("/:id", func(c *gin.Context) {
+	g.GET("/:id", auth.LoginRequired(), func(c *gin.Context) {
 		u, _ := c.Get("user")
 		verificationId := c.Param("id")
 

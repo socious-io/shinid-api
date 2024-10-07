@@ -113,7 +113,7 @@ func (u *User) UpdateProfile(ctx context.Context) error {
 	rows, err := database.Query(
 		ctx,
 		"users/update_profile",
-		u.ID, u.FirstName, u.LastName, u.Bio, u.JobTitle, u.Phone, u.Username,
+		u.ID, u.FirstName, u.LastName, u.Bio, u.JobTitle, u.Phone, u.Username, u.AvatarID,
 	)
 	if err != nil {
 		return err

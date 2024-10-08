@@ -56,9 +56,11 @@ func (c VerificationStatusType) Value() (driver.Value, error) {
 type CredentialStatusType string
 
 const (
+	StatusCreated  CredentialStatusType = "CREATED"
 	StatusIssued   CredentialStatusType = "ISSUED"
 	StatusClaimed  CredentialStatusType = "CLAIMED"
 	StatusCanceled CredentialStatusType = "CANCELED"
+	StatusRevoked  CredentialStatusType = "REVOKED"
 )
 
 func (c *CredentialStatusType) Scan(value interface{}) error {

@@ -37,7 +37,7 @@ func CreateDID() (string, error) {
 	}
 
 	// First API call to create DID
-	didRes, err := makeRequest("/cloud-agent/did-registrar/dids", H{
+	didRes, err := makeRequest("/cloud-agent/did-registrar/dids", "POST", H{
 		"documentTemplate": documentTemplate,
 	})
 
@@ -54,7 +54,7 @@ func CreateDID() (string, error) {
 	longFormDid := didResponse["longFormDid"].(string)
 
 	// Second API call to publish DID
-	pubRes, err := makeRequest(fmt.Sprintf("/cloud-agent/did-registrar/dids/%s/publications", longFormDid), H{})
+	pubRes, err := makeRequest(fmt.Sprintf("/cloud-agent/did-registrar/dids/%s/publications", longFormDid), "POST", H{})
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +70,7 @@ func CreateDID() (string, error) {
 }
 
 func CreateConnection(callback string) (*Connect, error) {
-	res, err := makeRequest("/cloud-agent/connections", H{"label": "Shin connection"})
+	res, err := makeRequest("/cloud-agent/connections", "POST", H{"label": "Shin connection"})
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func CreateConnection(callback string) (*Connect, error) {
 }
 
 func ProofRequest(connectionID string, challenge []byte) (string, error) {
-	res, err := makeRequest("/cloud-agent/present-proof/presentations", H{
+	res, err := makeRequest("/cloud-agent/present-proof/presentations", "POST", H{
 		"connectionId": connectionID,
 		"proofs":       []H{},
 		"claims": H{
@@ -162,7 +162,7 @@ func SendCredential(connectionID, did string, claims interface{}) (H, error) {
 		"schemaId":          nil,
 		"automaticIssuance": true,
 	}
-	res, err := makeRequest("/cloud-agent/issue-credentials/credential-offers", payload)
+	res, err := makeRequest("/cloud-agent/issue-credentials/credential-offers", "POST", payload)
 	if err != nil {
 		return nil, err
 	}
@@ -173,14 +173,19 @@ func SendCredential(connectionID, did string, claims interface{}) (H, error) {
 	return body, nil
 }
 
-func makeRequest(path string, body H) ([]byte, error) {
+func RevokeCredential(credentialID string) error {
+	_, err := makeRequest(fmt.Sprintf("/cloud-agent/credential-status/revoke-credential/%s", credentialID), "PATCH", H{})
+	return err
+}
+
+func makeRequest(path string, method string, body H) ([]byte, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("%s%s", config.Config.Wellet.Agent, path)
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, err
 	}

@@ -318,19 +318,31 @@ func validateVC(schema Schema, vc wallet.H, attrs []VerificationAttribute) error
 }
 
 func convertValsToNumber(value interface{}, attrVal string) (int, int, error) {
-	var val int
+	var (
+		val    int
+		isTime bool = false
+	)
 	switch v := value.(type) {
 	case string:
 		if intVal, err := strconv.Atoi(v); err == nil {
 			val = intVal
+		} else {
+			if t, err := time.Parse(time.RFC3339, v); err == nil {
+				val = int(t.Unix())
+				isTime = true
+			}
 		}
 	case int:
 		val = v
-
+	}
+	if isTime {
+		if t, err := time.Parse(time.RFC3339, attrVal); err == nil {
+			return int(t.Unix()), val, nil
+		}
 	}
 	attrIntVal, err := strconv.Atoi(attrVal)
 	if err != nil {
-		return 0, 0, fmt.Errorf("could not operate bigger/smaller on not number values")
+		return 0, 0, fmt.Errorf("could not operate bigger/smaller on not number/date values")
 	}
 	return val, attrIntVal, nil
 }

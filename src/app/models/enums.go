@@ -32,9 +32,10 @@ func (a AttributeType) Value() (driver.Value, error) {
 type VerificationStatusType string
 
 const (
-	StatusRequested VerificationStatusType = "REQUESTED"
-	StatusVerfied   VerificationStatusType = "VERIFIED"
-	StatusFailed    VerificationStatusType = "FAILED"
+	StatusVerifCreated   VerificationStatusType = "CREATED"
+	StatusVerifRequested VerificationStatusType = "REQUESTED"
+	StatusVerifVerfied   VerificationStatusType = "VERIFIED"
+	StatusVerifFailed    VerificationStatusType = "FAILED"
 )
 
 func (c *VerificationStatusType) Scan(value interface{}) error {

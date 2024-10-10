@@ -38,7 +38,3 @@ VALUES
   ('start_date', 'Start Date', 'DATETIME', (SELECT id FROM work_certificate_schema)),
   ('end_date', 'End Date', 'DATETIME', (SELECT id FROM work_certificate_schema)),
   ('description', 'Description', 'TEXT', (SELECT id FROM work_certificate_schema));
-
-
--- Deleting KYC Schema
-DELETE FROM credential_schemas WHERE name='KYC' AND public=true;
